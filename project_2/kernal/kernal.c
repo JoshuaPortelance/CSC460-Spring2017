@@ -10,6 +10,7 @@
  */ 
 // Kernel functions.
 void Kernel_OS_Abort(unsigned int error);
+void Kernel_idle(void);
 void Kernel_main_loop(void);
 void Kernel_request_handler(void);
 
