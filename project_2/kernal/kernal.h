@@ -3,8 +3,31 @@
  *
  * Created: 3/10/2017 11:00:55 AM
  *  Author: Josh
- */ 
+ */
+ 
+/*
+ * Definitions.
+ */
+#define Disable_Interrupt() asm volatile ("cli"::)
+#define Enable_Interrupt()	asm volatile ("sei"::)
 
+/*
+ * Type Definitions.
+ */
+typedef enum process_states
+{
+   DEAD = 0,
+   READY,
+   RUNNING
+} PROCESS_STATES;
+
+/*
+ * Structures.
+ */
+
+/*
+ * Functions.
+ */
 void Kernel_OS_Abort(unsigned int error);
 // void exit_kernel(void);
 // void enter_kernel(void);

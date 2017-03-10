@@ -4,35 +4,41 @@
  * Created: 3/10/2017 11:00:39 AM
  *  Author: Josh
  */
+ 
+/*
+ * Definitions.
+ */
+#define Disable_Interrupt()		asm volatile ("cli"::)
+#define Enable_Interrupt()		asm volatile ("sei"::)
 
 /*
  * Function Prototypes.
  */ 
 // Kernel functions.
-void Kernel_OS_Abort(unsigned int error);
-void Kernel_idle(void);
-void Kernel_main_loop(void);
-void Kernel_request_handler(void);
+static void Kernel_OS_Abort(unsigned int error);
+static void Kernel_idle(void);
+static void Kernel_main_loop(void);
+static void Kernel_request_handler(void);
 
 // Context switching functions.
 // void exit_kernel(void);
 // void enter_kernel(void);
 
 // Task functions.
-PID  Kernel_Task_Create_System(void (*f)(void), int arg);
-PID  Kernel_Task_Create_RR(void (*f)(void), int arg);
-PID  Kernel_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
-void Kernel_Task_Next(void);
-int  Kernel_Task_GetArg(void);
+static PID  Kernel_Task_Create_System(void (*f)(void), int arg);
+static PID  Kernel_Task_Create_RR(void (*f)(void), int arg);
+static PID  Kernel_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
+static void Kernel_Task_Next(void);
+static int  Kernel_Task_GetArg(void);
 
 // Channel functions.
-CHAN Kernel_Chan_Init();
-void Kernel_Send(CHAN ch, int v);
-int  Kernel_Recv(CHAN ch);
-void Kernel_Write(CHAN ch, int v);
+static CHAN Kernel_Chan_Init();
+static void Kernel_Send(CHAN ch, int v);
+static int  Kernel_Recv(CHAN ch);
+static void Kernel_Write(CHAN ch, int v);
 
 // Other functions.
-unsigned int Kernel_Now();
+static unsigned int Kernel_Now();
 
 
 /*
@@ -45,7 +51,7 @@ unsigned int Kernel_Now();
  *	Return:
  *		void
  */
-void Kernel_OS_Abort(unsigned int error)
+static void Kernel_OS_Abort(unsigned int error)
 {
 
 }
@@ -62,7 +68,7 @@ void Kernel_OS_Abort(unsigned int error)
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-PID   Kernel_Task_Create_System(void (*f)(void), int arg)
+static PID Kernel_Task_Create_System(void (*f)(void), int arg)
 {
 
 }
@@ -79,7 +85,7 @@ PID   Kernel_Task_Create_System(void (*f)(void), int arg)
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-PID   Kernel_Task_Create_RR(void (*f)(void), int arg)
+static PID Kernel_Task_Create_RR(void (*f)(void), int arg)
 {
 
 }
@@ -99,7 +105,7 @@ PID   Kernel_Task_Create_RR(void (*f)(void), int arg)
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-PID   Kernel_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
+static PID Kernel_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
 {
 
 }
@@ -115,7 +121,7 @@ PID   Kernel_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet
  *	Return:
  *		void
  */
-void Kernel_Task_Next(void)
+static void Kernel_Task_Next(void)
 {
 
 }
@@ -131,7 +137,7 @@ void Kernel_Task_Next(void)
  *	Return:
  *		int - The arg that was used when creating the task.
  */
-int  Kernel_Task_GetArg(void)
+static int Kernel_Task_GetArg(void)
 {
 
 }
@@ -147,7 +153,7 @@ int  Kernel_Task_GetArg(void)
  *	Return:
  *		CHAN - An initialized channel if successful, otherwise NULL.
  */
-CHAN Kernel_Chan_Init()
+static CHAN Kernel_Chan_Init()
 {
 
 }
@@ -167,7 +173,7 @@ CHAN Kernel_Chan_Init()
  *	Return:
  *		void
  */
-void Kernel_Send( CHAN ch, int v )
+static void Kernel_Send(CHAN ch, int v)
 {
 
 }
@@ -185,7 +191,7 @@ void Kernel_Send( CHAN ch, int v )
  *	Return:
  *		int		- The message that was received.
  */
-int Kernel_Recv( CHAN ch )
+static int Kernel_Recv(CHAN ch)
 {
 
 }
@@ -204,7 +210,7 @@ int Kernel_Recv( CHAN ch )
  *	Return:
  *		void
  */
-void Kernel_Write( CHAN ch, int v )
+static void Kernel_Write(CHAN ch, int v)
 {
 
 }
@@ -220,7 +226,7 @@ void Kernel_Write( CHAN ch, int v )
  *	Return:
  *		unsigned int - The number of milliseconds since OS_Init().
  */
-unsigned int Kernel_Now()
+static unsigned int Kernel_Now()
 {
 
 }
