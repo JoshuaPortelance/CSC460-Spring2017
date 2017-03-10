@@ -48,7 +48,7 @@ PID   Task_Create_RR(    void (*f)(void), int arg);
 
  /**
    * f a parameterless function to be created as a process instance
-   * arg an integer argument to be assigned to this process instanace
+   * arg an integer argument to be assigned to this process instance
    * period its execution period in multiples of TICKs
    * wcet its worst-case execution time in TICKs, must be less than "period"
    * offset its start time in TICKs
@@ -83,7 +83,7 @@ CHAN Chan_Init();
  * sender waiting. When a sender and one or more receiver are ready to communicate,
  * the value "v" from the sender is returned to each waiting receiver. That is, the
  * communication occurs when both sender and the receiver(s) are ready.
- * Thus, communication is synchronous. Mutliple receivers can receive from the same 
+ * Thus, communication is synchronous. Multiple receivers can receive from the same 
  * CHAN. When a sender is ready to communicate with multiple receivers, all receivers
  * will receive the same value at the same time, i.e., a Send() is a multi-cast operation
  * when multiple receivers are waiting. However, when a sender is waiting, then the next
@@ -114,14 +114,14 @@ void Write( CHAN ch, int v );   // non-blocking send on CHAN
 /**  
   * Returns the number of milliseconds since OS_Init(). Note that this number
   * wraps around after it overflows as an unsigned integer. The arithmetic
-  * of 2's complement will take care of this wrap-around behaviour if you use
+  * of 2's complement will take care of this wrap-around behavior if you use
   * this number correctly.
   * Let  T = Now() and we want to know when Now() reaches T+1000.
   * Now() is always increasing. Even if Now() wraps around, (Now() - T) always
   * >= 0. As long as the duration of interest is less than the wrap-around time,
   * then (Now() - T >= 1000) would mean we have reached T+1000.
   * However, we cannot compare Now() against T directly due to this wrap-around
-  * behaviour.
+  * behavior.
   * Now() will wrap around every 65536 milliseconds. Therefore, for measurement
   * purposes, it should be used for durations less than 65 seconds.
   */
