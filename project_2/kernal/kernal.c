@@ -1,12 +1,41 @@
 /*
- * Kernal.c
+ * Kernel.c
  *
  * Created: 3/10/2017 11:00:39 AM
  *  Author: Josh
- */ 
+ */
 
 /*
- *	Kernal_OS_Abort
+ * Function Prototypes.
+ */ 
+// Kernel functions.
+void Kernel_OS_Abort(unsigned int error);
+void Kernel_main_loop(void);
+void Kernel_request_handler(void);
+
+// Context switching functions.
+// void exit_kernel(void);
+// void enter_kernel(void);
+
+// Task functions.
+PID  Kernel_Task_Create_System(void (*f)(void), int arg);
+PID  Kernel_Task_Create_RR(void (*f)(void), int arg);
+PID  Kernel_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
+void Kernel_Task_Next(void);
+int  Kernel_Task_GetArg(void);
+
+// Channel functions.
+CHAN Kernel_Chan_Init();
+void Kernel_Send(CHAN ch, int v);
+int  Kernel_Recv(CHAN ch);
+void Kernel_Write(CHAN ch, int v);
+
+// Other functions.
+unsigned int Kernel_Now();
+
+
+/*
+ *	Kernel_OS_Abort
  *
  *	Aborts the RTOS and enters a "non-executing" state with an error code.
  *
@@ -15,14 +44,14 @@
  *	Return:
  *		void
  */
- void Kernal_OS_Abort(unsigned int error)
- {
+void Kernel_OS_Abort(unsigned int error)
+{
 
- }
+}
 
 
 /*
- *	Kernal_Task_Create_System
+ *	Kernel_Task_Create_System
  *
  *	Creates a task with System level priority.
  *
@@ -32,14 +61,14 @@
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
- PID   Kernal_Task_Create_System(void (*f)(void), int arg)
- {
+PID   Kernel_Task_Create_System(void (*f)(void), int arg)
+{
 
- }
+}
 
 
 /*
- *	Kernal_Task_Create_RR
+ *	Kernel_Task_Create_RR
  *
  *	Creates a task with RR level priority.
  *
@@ -49,14 +78,14 @@
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
- PID   Kernal_Task_Create_RR(void (*f)(void), int arg)
- {
+PID   Kernel_Task_Create_RR(void (*f)(void), int arg)
+{
 
- }
+}
 
 
 /*
- *	Kernal_Task_Create_Period
+ *	Kernel_Task_Create_Period
  *
  *	Creates a periodic task with the periodic priority level.
  *
@@ -69,14 +98,14 @@
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
- PID   Kernal_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
- {
+PID   Kernel_Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
+{
 
- }
+}
 
 
 /*
- *	Kernal_Task_Next
+ *	Kernel_Task_Next
  *
  *	Switches to the next highest priority task.
  *
@@ -85,14 +114,14 @@
  *	Return:
  *		void
  */
- void Kernal_Task_Next(void)
- {
+void Kernel_Task_Next(void)
+{
 
- }
+}
 
 
 /*
- *	Kernal_Task_GetArg
+ *	Kernel_Task_GetArg
  *
  *	Gets the integer that was assigned to the task when created.
  *
@@ -101,14 +130,14 @@
  *	Return:
  *		int - The arg that was used when creating the task.
  */
- int  Kernal_Task_GetArg(void)
- {
+int  Kernel_Task_GetArg(void)
+{
 
- }
+}
 
 
 /*
- *	Kernal_Chan_Init
+ *	Kernel_Chan_Init
  *
  *	Initializes a channel.
  *
@@ -117,14 +146,14 @@
  *	Return:
  *		CHAN - An initialized channel if successful, otherwise NULL.
  */
- CHAN Kernal_Chan_Init()
- {
+CHAN Kernel_Chan_Init()
+{
 
- }
+}
 
 
 /*
- *	Kernal_Send
+ *	Kernel_Send
  *
  *	Sends the message v over channel ch. 
  *		- If there are no receivers the calling task is blocked.
@@ -137,14 +166,14 @@
  *	Return:
  *		void
  */
- void Kernal_Send( CHAN ch, int v )
- {
+void Kernel_Send( CHAN ch, int v )
+{
 
- }
+}
 
 
 /*
- *	Kernal_Recv
+ *	Kernel_Recv
  *
  *	Receives a message over channel ch.
  *		- If there is no sender on the channel the calling task will be blocked.
@@ -155,14 +184,14 @@
  *	Return:
  *		int		- The message that was received.
  */
- int Kernal_Recv( CHAN ch )
- {
+int Kernel_Recv( CHAN ch )
+{
 
- }
+}
 
 
 /*
- *	Kernal_Write
+ *	Kernel_Write
  *
  *	Sends the message v over channel ch, but do not wait if there are no receivers.
  *		- If there is already a sender on the channel the RTOS will abort in an error state.
@@ -174,14 +203,14 @@
  *	Return:
  *		void
  */
- void Kernal_Write( CHAN ch, int v )
- {
+void Kernel_Write( CHAN ch, int v )
+{
 
- }
+}
 
 
 /*
- *	Kernal_Now
+ *	Kernel_Now
  *
  *	Returns the number of milliseconds since OS_Init().
  *
@@ -190,7 +219,7 @@
  *	Return:
  *		unsigned int - The number of milliseconds since OS_Init().
  */
- unsigned int Kernal_Now()
- {
+unsigned int Kernel_Now()
+{
 
- }
+}

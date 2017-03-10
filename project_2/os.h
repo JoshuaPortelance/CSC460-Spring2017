@@ -46,14 +46,14 @@ void OS_Abort(unsigned int error);
 PID   Task_Create_System(void (*f)(void), int arg);
 PID   Task_Create_RR(    void (*f)(void), int arg);
 
- /**
-   * f a parameterless function to be created as a process instance
-   * arg an integer argument to be assigned to this process instance
-   * period its execution period in multiples of TICKs
-   * wcet its worst-case execution time in TICKs, must be less than "period"
-   * offset its start time in TICKs
-   * returns 0 if not successful; otherwise a non-zero PID.
-   */
+ /*
+  * f a parameterless function to be created as a process instance
+  * arg an integer argument to be assigned to this process instance
+  * period its execution period in multiples of TICKs
+  * wcet its worst-case execution time in TICKs, must be less than "period"
+  * offset its start time in TICKs
+  * returns 0 if not successful; otherwise a non-zero PID.
+  */
 PID   Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
 
 // NOTE: When a task function returns, it terminates automatically!!

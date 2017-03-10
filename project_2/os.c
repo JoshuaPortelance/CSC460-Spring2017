@@ -15,10 +15,10 @@
  *	Return:
  *		void
  */
- void OS_Abort(unsigned int error)
- {
+void OS_Abort(unsigned int error)
+{
 
- }
+}
 
 
 /*
@@ -32,10 +32,10 @@
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
- PID   Task_Create_System(void (*f)(void), int arg)
- {
+PID   Task_Create_System(void (*f)(void), int arg)
+{
 
- }
+}
 
 
 /*
@@ -49,10 +49,10 @@
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
- PID   Task_Create_RR(void (*f)(void), int arg)
- {
+PID   Task_Create_RR(void (*f)(void), int arg)
+{
 
- }
+}
 
 
 /*
@@ -69,10 +69,10 @@
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
- PID   Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
- {
+PID   Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
+{
 
- }
+}
 
 
 /*
@@ -85,10 +85,10 @@
  *	Return:
  *		void
  */
- void Task_Next(void)
- {
+void Task_Next(void)
+{
 
- }
+}
 
 
 /*
@@ -101,10 +101,10 @@
  *	Return:
  *		int - The arg that was used when creating the task.
  */
- int  Task_GetArg(void)
- {
+int  Task_GetArg(void)
+{
 
- }
+}
 
 
 /*
@@ -117,10 +117,10 @@
  *	Return:
  *		CHAN - An initialized channel if successful, otherwise NULL.
  */
- CHAN Chan_Init()
- {
+CHAN Chan_Init()
+{
 
- }
+}
 
 
 /*
@@ -137,10 +137,10 @@
  *	Return:
  *		void
  */
- void Send( CHAN ch, int v )
- {
+void Send( CHAN ch, int v )
+{
 
- }
+}
 
 
 /*
@@ -155,10 +155,10 @@
  *	Return:
  *		int		- The message that was received.
  */
- int Recv( CHAN ch )
- {
+int Recv( CHAN ch )
+{
 
- }
+}
 
 
 /*
@@ -174,10 +174,10 @@
  *	Return:
  *		void
  */
- void Write( CHAN ch, int v )
- {
+void Write( CHAN ch, int v )
+{
 
- }
+}
 
 
 /*
@@ -190,7 +190,7 @@
  *	Return:
  *		unsigned int - The number of milliseconds since OS_Init().
  */
- unsigned int Now()
- {
+unsigned int Now()
+{
 
- }
+}
