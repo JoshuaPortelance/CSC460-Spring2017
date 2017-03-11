@@ -5,7 +5,11 @@
  *  Author: Josh
  */
 
+#ifndef _KERNEL_H
+#define _KERNEL_H
+
 #include "os.h"
+#include "error_codes.h"
  
 /*
  * Definitions.
@@ -21,6 +25,7 @@ typedef void (*voidfuncptr) (void);	/* pointer to void f(void) */
 typedef enum process_states
 {
 	DEAD = 0,
+	BLOCKED,
 	READY,
 	RUNNING
 } PROCESS_STATES;
@@ -48,7 +53,10 @@ typedef enum process_priorities
 	ROUNDROBIN
 } PROCESS_PRIORITIES;
 
-typedef struct ProcessDescriptor
+/*
+ * Structures.
+ */
+typedef struct process_descriptor
 {
 	unsigned char *sp;	/* stack pointer into the "workSpace" */
 	unsigned char workSpace[WORKSPACE];
@@ -57,10 +65,11 @@ typedef struct ProcessDescriptor
 	KERNEL_REQUEST_TYPE request;
 	int creation_arg;
 	int pid;
-	unsigned int error;
+	ERROR_CODE error;
 	PROCESS_PRIORITIES priority;
+	TICK period;
+	TICK wcet;
+	TICK offset;
 } PD;
 
-/*
- * Structures.
- */
+#endif /* _KERNEL_H */
