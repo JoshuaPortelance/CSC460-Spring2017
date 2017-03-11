@@ -1,18 +1,39 @@
 /*
- * cswitch.S
- *
- * Created: 3/10/2017 11:09:17 AM
- *  Author: Josh
+ * Compile using:
+ *   avr-gcc -c -O2 -mmcu=${CPU} -Wa,--gstabs -o switch.o switch.S
  */
 
 /*
- *	Locations of well-known registers.
- */
-SREG = 0x3F
-SPH  = 0x3E
-SPL  = 0x3D
-EIND = 0X3C
+  * Note:
+  *
+  * This code is based on "thread_swtch.S" by Brian S. Dean, and the
+  * "os_cpu_a.asm" of uC/OS-II AVR Specific code by Ole Saether. 
+  * They are adapted to match our need of a "full-served" kernel model.
+  *
+  *  Author:  Dr. Mantis Cheng, 28 September 2006.
+  *
+  *  ChangeLog: Modified by Alexander M. Hoole, October 2006.
+  *
+  *  !!!!!   This code has NEVER been tested.  !!!!!
+  *  !!!!!   Use at your own risk  !!!!
+  */
 
+
+/* locations of well-known registers */
+SREG   = 0x3F
+SPH    = 0x3E
+SPL    = 0x3D
+EIND   = 0X3C
+
+/*
+  * MACROS
+  */
+;
+; Push all registers and then the status register.
+; It is important to keep the order of SAVECTX and RESTORECTX  exactly
+; in reverse. Also, when a new process is created, it is important to 
+; initialize its "initial" context in the same order as SAVECTX.
+;	
 .macro	SAVECTX
 	push	r0
 	push	r1
@@ -51,7 +72,9 @@ EIND = 0X3C
 	in r31, SREG
 	push r31
 .endm
-
+;
+; Pop all registers and the status registers
+;
 .macro	RESTORECTX
 	pop r31
 	out SREG,r31
@@ -91,65 +114,101 @@ EIND = 0X3C
 	pop	r0
 .endm
 
-.section .text
-.global CSwitch
-.global Exit_Kernel
-.extern Dispatch
-.extern CurrentP
-
+        .section .text
+        .global CSwitch
+        .global Exit_Kernel
+        .global Enter_Kernel
+        .extern  KernelSp
+        .extern  CurrentSp
 /*
- *	CSwitch() code begins here.
- *
- *	This function is called by a user task. Upon entry, we are using
- *	the CurrentP's stack, on top of which contains the return address
- *	of the call to CSwitch(). There are three phases in this function:
- *		1) save current CurrentP's context, and then its H/W stack pointer;
- *		2) choose a new CurrentP;
- *		3) restore the new CurrentP's context, i.e., restore its H/W stack pointer.
- * 
- *	Assumption: This function is executed with interrupts already disabled.
- *
- *	Note: AVR devices use LITTLE endian format, i.e., a 16-bit value starts
- *	with the lower-order byte first, then the higher-order byte.
- */
+  * The actual CSwitch() code begins here.
+  *
+  * This function is called by the kernel. Upon entry, we are using
+  * the kernel stack, on top of which contains the return address 
+  * of the call to CSwitch() (or Exit_Kernel()).
+  * 
+  * Assumption: Our kernel is executed with interrupts already disabled.
+  *
+  * Note: AVR devices use LITTLE endian format, i.e., a 16-bit value starts
+  * with the lower-order byte first, then the higher-order byte.
+  *
+  * void CSwitch();
+  * void Exit_Kernel(); 
+  */
 CSwitch:
-
-	/* 
-	 *	Assume I = 0, i.e., all interrupts are disabled.
-	 */
-	SAVECTX
-
-	/* 
-	 *	Now, we have saved the CurrentP's context.
-	 *	Save the current H/W stack pointer into CurrentP->sp.
-	 */
-	lds  r30, CurrentP
-	lds  r31, CurrentP+1	/* Z = (R31,R30) contains the "sp" */
-	in   r28, SPL
-	in   r29, SPH
-	st   Z+, r28			/* store (R28=SPL,R29=SPH) indirectly via Z */
-	st   Z+, r29			/* Now, CurrentP->sp = the current H/W stack pointer */
-	
-	/*
-	 *	Now, we should select a new "CurrentP".
-	 */
 Exit_Kernel:
-	call Dispatch
-
-	/*
-	 *	We are now ready to restore a new CurrentP's context, i.e.,
-	 *	switching the H/W stack pointer to this new CurrentP->sp.
-	 */ 
-	lds  r30, CurrentP
-	lds  r31, CurrentP+1	/* Z = (R31,R30) contains the new "sp" */
-	ld   r28, Z+
-	ld   r29, Z+
-	out  SPL, r28
-	out  SPH, r29			/* Now, H/W stack pointer = CurrentP->sp */
-
-	/*
-	* We are now executing in our new CurrentP's stack.
-	* Note: at the bottom of the CurrentP's context is its return address.
-	*/
-	RESTORECTX
-	ret						/* don't use rti to re-enable interrupts */
+        /* 
+          * This is the "top" half of CSwitch(), generally called by the kernel.
+          * Assume I = 0, i.e., all interrupts are disabled.
+          */
+        SAVECTX
+        /* 
+          * Now, we have saved the kernel's context.
+          * Save the current H/W stack pointer into KernelSp.
+          */
+        in   r30, SPL
+        in   r31, SPH
+        sts  KernelSp, r30
+        sts  KernelSp+1, r31
+        /*
+          * We are now ready to restore Cp's context, i.e.,
+          * switching the H/W stack pointer to CurrentSp.
+          */ 
+        lds  r30, CurrentSp
+        lds  r31, CurrentSp+1
+        out  SPL, r30
+        out  SPH, r31
+        /*
+          * We are now executing in Cp's stack.
+          * Note: at the bottom of the Cp's context is its return address.
+          */
+        RESTORECTX
+        reti         /* re-enable all global interrupts */
+/*
+  * All system call eventually enters here!
+  * There are two possibilities how we get here: 
+  *  1) Cp explicitly invokes one of the kernel API call stub, which indirectly
+  *       invoke Enter_Kernel().
+  *  2) a timer interrupt, which somehow "jumps" into here.
+  * Let us consider case (1) first. You have to figure out how to deal with
+  * timer interrupts yourself.
+  *
+  * Assumption: All interrupts are disabled upon entering here, and
+  *     we are still executing on Cp's stack. The return address of
+  *     the caller of Enter_Kernel() is on the top of the stack.
+  *
+  * void Enter_Kernel();
+  */
+Enter_Kernel:   
+        /*
+          * This is the "bottom" half of CSwitch(). We are still executing in
+          * Cp's context.
+          */
+        SAVECTX
+        /* 
+          * Now, we have saved the Cp's context.
+          * Save the current H/W stack pointer into CurrentSp.
+          */
+        in   r30, SPL
+        in   r31, SPH
+        sts  CurrentSp, r30
+        sts  CurrentSp+1, r31
+        /*
+          * We are now ready to restore kernel's context, i.e.,
+          * switching the H/W stack pointer back to KernelSp.
+          */ 
+        lds  r30, KernelSp
+        lds  r31, KernelSp+1
+        out  SPL, r30
+        out  SPH, r31
+        /*
+          * We are now executing in kernel's stack.
+          */
+       RESTORECTX
+        /* 
+          * We are ready to return to the caller of CSwitch() (or Exit_Kernel()).
+          * Note: We should NOT re-enable interrupts while kernel is running.
+          *         Therefore, we use "ret", and not "reti".
+          */
+       ret
+/* end of CSwitch() */
