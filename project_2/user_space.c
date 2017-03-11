@@ -63,7 +63,7 @@ void Pong()
 unsigned int main_a(void)
 {
 	// Create all tasks.
-	Task_Create_System(Ping, 1);
-	Task_Create_System(Pong, 2);
+	Task_Create_RR(Ping, 1);
+	Task_Create_RR(Pong, 2);
 	return 0;
 }

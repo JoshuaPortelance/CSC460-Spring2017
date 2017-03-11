@@ -19,20 +19,27 @@
  * Globals.
  */
 static PD Process[MAXTHREAD];
-static PD* periodic_queue[MAXTHREAD];
-volatile static unsigned int periodic_queue_front = 0;
-volatile static unsigned int periodic_queue_rear = -1;
+
 static PD* system_queue[MAXTHREAD];
 volatile static unsigned int system_queue_front = 0;
 volatile static unsigned int system_queue_rear = -1;
+
+static PD* periodic_queue[MAXTHREAD];
+volatile static unsigned int periodic_queue_front = 0;
+volatile static unsigned int periodic_queue_rear = -1;
+
 static PD* rr_queue[MAXTHREAD];
 volatile static unsigned int rr_queue_front = 0;
 volatile static unsigned int rr_queue_rear = -1;
+
+static PD* periodic_lookup[MAXTHREAD];
+
 volatile static PD* Cp;
 volatile unsigned char *KernelSp;
 unsigned char *CurrentSp;
 volatile static unsigned int NextP;
 volatile static unsigned int KernelActive;
+
 volatile static unsigned int Tasks;
 volatile static unsigned int Periodic_Tasks;
 volatile static unsigned int System_Tasks;
@@ -89,6 +96,10 @@ volatile static unsigned int RR_Tasks;
 	// Queue functions.
 	void enqueue_system(PD* p);
 	PD* dequeue_system(void);
+	void enqueue_periodic(PD* p);
+	PD* dequeue_periodic(void);
+	void enqueue_rr(PD* p);
+	PD* dequeue_rr(void);
 
 /*
  * API Functions.
@@ -106,7 +117,17 @@ volatile static unsigned int RR_Tasks;
  */
 void OS_Abort(unsigned int error)
 {
-
+	if (KernelActive)
+	{
+		Disable_Interrupt();
+		Cp->request = ABORT;
+		Cp->error = error;
+		Enter_Kernel();
+	}
+	else
+	{
+		Kernel_OS_Abort(error);
+	}
 }
 
 /*
@@ -440,14 +461,17 @@ void Kernel_Request_Handler(void)
 				switch(Cp->priority)
 				{
 					case SYSTEM:
-					enqueue_system(Cp);
-					break;
+						enqueue_system(Cp);
+						break;
 					case PERIODIC:
-					break;
+						enqueue_periodic(Cp);
+						break;
 					case ROUNDROBIN:
-					break;
+						enqueue_rr(Cp);
+						break;
 					default:
-					break;
+						Kernel_OS_Abort(DEFUALT_PRIORITY);
+						break;
 				}
 				Kernel_Dispatch();
 				break;
@@ -497,11 +521,11 @@ void Kernel_Dispatch(void)
 	}
 	else if(Periodic_Tasks > 0)
 	{
-		//Cp = dequeue_periodic();
+		Cp = dequeue_periodic();
 	}
 	else if(RR_Tasks > 0)
 	{
-		//Cp = dequeue_rr();
+		Cp = dequeue_rr();
 	}
 	/*
 	else
@@ -572,10 +596,14 @@ void Kernel_Create_Task_At(PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIOR
 			enqueue_system(p);
 			break;
 		case PERIODIC:
+			periodic_lookup[Periodic_Tasks] = p;
+			enqueue_periodic(p);
 			break;
 		case ROUNDROBIN:
+			enqueue_rr(p);
 			break;
 		default:
+			Kernel_OS_Abort(DEFUALT_PRIORITY);
 			break;
 	}
 }
@@ -624,8 +652,22 @@ PID Kernel_Task_Create_System(void (*f)(void), int arg)
  */
 PID Kernel_Task_Create_Round_Robin(void (*f)(void), int arg)
 {
-	PID pid = 1;
-	return pid;
+	int x;
+
+	if (Tasks == MAXTHREAD)
+	{
+		return 0;  /* Too many task! */
+	}
+
+	/* find a DEAD PD that we can use */
+	for (x = 0; x < MAXTHREAD; x++)
+	{
+		if (Process[x].state == DEAD) break;
+	}
+
+	++Tasks;
+	Kernel_Create_Task_At(&(Process[x]), f, arg, x, ROUNDROBIN, 0, 0, 0);
+	return x;
 }
 
 /*
@@ -644,8 +686,22 @@ PID Kernel_Task_Create_Round_Robin(void (*f)(void), int arg)
  */
 PID Kernel_Task_Create_Periodic(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
 {
-	PID pid = 1;
-	return pid;
+	int x;
+
+	if (Tasks == MAXTHREAD)
+	{
+		return 0;  /* Too many task! */
+	}
+
+	/* find a DEAD PD that we can use */
+	for (x = 0; x < MAXTHREAD; x++)
+	{
+		if (Process[x].state == DEAD) break;
+	}
+
+	++Tasks;
+	Kernel_Create_Task_At(&(Process[x]), f, arg, x, PERIODIC, period, wcet, offset);
+	return x;
 }
 
 /*
@@ -668,10 +724,25 @@ int Kernel_Task_GetArg(void)
  */
 void Kernel_Task_Terminate()
 {
-   if (KernelActive)
-   {
-      Disable_Interrupt();
-      Cp -> request = TERMINATE;
+	if (KernelActive)
+	{
+		Disable_Interrupt();
+		Cp -> request = TERMINATE;
+		switch(Cp->priority)
+		{
+			case SYSTEM:
+				System_Tasks--;
+				break;
+			case PERIODIC:
+				Periodic_Tasks--;
+				break;
+			case ROUNDROBIN:
+				RR_Tasks--;
+				break;
+			default:
+				Kernel_OS_Abort(DEFUALT_PRIORITY);
+				break;
+	  }
       Enter_Kernel();
      /* never returns here! */
    }
@@ -744,7 +815,6 @@ void Kernel_Write(CHAN ch, int v)
 
 }
 
-
 /*
  *	Kernel_Now
  *
@@ -758,6 +828,14 @@ unsigned int Kernel_Now()
 	return 1;
 }
 
+/*
+ *	enqueue_system
+ *
+ *	Enqueues the PD of a ready system task into the system ready queue.
+ *
+ *	Params:
+ *		PD* p - Pointer to the tasks process descriptor.
+ */
 void enqueue_system(PD* p)
 {
 	if(System_Tasks < MAXTHREAD)
@@ -772,6 +850,14 @@ void enqueue_system(PD* p)
 	}
 }
 
+/*
+ *	dequeue_system
+ *
+ *	Dequeues the PD of the task that is going to be ran form the system ready queue.
+ *
+ *	Return:
+ *		PD* p - Pointer to the tasks process descriptor that was removed.
+ */
 PD* dequeue_system(void)
 {
 	PD* p = system_queue[system_queue_front++];
@@ -782,6 +868,92 @@ PD* dequeue_system(void)
 	}
 
 	System_Tasks--;
+	return p;
+}
+
+/*
+ *	enqueue_periodic
+ *
+ *	Enqueues the PD of a ready periodic task into the periodic ready queue.
+ *
+ *	Params:
+ *		PD* p - Pointer to the tasks process descriptor.
+ */
+void enqueue_periodic(PD* p)
+{
+	if(Periodic_Tasks < MAXTHREAD)
+	{
+		if(periodic_queue_rear == MAXTHREAD - 1)
+		{
+			periodic_queue_rear = -1;
+		}
+
+		periodic_queue[++periodic_queue_rear] = p;
+		Periodic_Tasks++;
+	}
+}
+
+/*
+ *	dequeue_periodic
+ *
+ *	Dequeues the PD of the task that is going to be ran form the periodic ready queue.
+ *
+ *	Return:
+ *		PD* p - Pointer to the tasks process descriptor that was removed.
+ */
+PD* dequeue_periodic(void)
+{
+	PD* p = periodic_queue[periodic_queue_front++];
+
+	if(periodic_queue_front == MAXTHREAD)
+	{
+		periodic_queue_front = 0;
+	}
+
+	Periodic_Tasks--;
+	return p;
+}
+
+/*
+ *	enqueue_rr
+ *
+ *	Enqueues the PD of a ready round robin task into the round robin ready queue.
+ *
+ *	Params:
+ *		PD* p - Pointer to the tasks process descriptor.
+ */
+void enqueue_rr(PD* p)
+{
+	if(RR_Tasks < MAXTHREAD)
+	{
+		if(rr_queue_rear == MAXTHREAD - 1)
+		{
+			rr_queue_rear = -1;
+		}
+
+		rr_queue[++rr_queue_rear] = p;
+		RR_Tasks++;
+	}
+}
+
+/*
+ *	dequeue_rr
+ *
+ *	Dequeues the PD of the task that is going to be ran form the round robin ready queue.
+ *
+ *	Return:
+ *		PD* p - Pointer to the tasks process descriptor that was removed.
+ */
+PD* dequeue_rr(void)
+{
+	PD* p = rr_queue[rr_queue_front++];
+
+	if(rr_queue_front == MAXTHREAD)
+	{
+		rr_queue_front = 0;
+	}
+
+	RR_Tasks--;
 	return p;
 }
 
