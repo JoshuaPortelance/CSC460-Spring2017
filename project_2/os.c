@@ -4,21 +4,25 @@
  *	Created: 3/10/2017 10:26:07 AM
  *	Author: Josh
  */
+
+#include <avr/io.h>
+#include "os.h"
+#include "kernel.h"
  
 /*
- * Function Prototypes.
+ * API Function Prototypes.
  */
-static void OS_Abort(unsigned int error);
-static PID Task_Create_System(void (*f)(void), int arg);
-static PID Task_Create_RR(void (*f)(void), int arg);
-static PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
-static void Task_Next(void);
-static int Task_GetArg(void);
-static CHAN Chan_Init();
-static void Send(CHAN ch, int v);
-static int Recv(CHAN ch);
-static void Write(CHAN ch, int v);
-static unsigned int Now();
+void OS_Abort(unsigned int error);
+PID Task_Create_System(void (*f)(void), int arg);
+PID Task_Create_RR(void (*f)(void), int arg);
+PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
+void Task_Next(void);
+int Task_GetArg(void);
+CHAN Chan_Init();
+void Send(CHAN ch, int v);
+int Recv(CHAN ch);
+void Write(CHAN ch, int v);
+unsigned int Now();
 
 
 /*
@@ -31,7 +35,7 @@ static unsigned int Now();
  *	Return:
  *		void
  */
-static void OS_Abort(unsigned int error)
+void OS_Abort(unsigned int error)
 {
 
 }
@@ -48,9 +52,14 @@ static void OS_Abort(unsigned int error)
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-static PID Task_Create_System(void (*f)(void), int arg)
+PID Task_Create_System(void (*f)(void), int arg)
 {
-
+	Disable_Interrupt();
+	Cp ->request = CREATESY;
+	Cp->code = f;
+	Cp->creation_arg = arg;
+	Enter_Kernel();
+	return Cp->pid;
 }
 
 
@@ -65,9 +74,10 @@ static PID Task_Create_System(void (*f)(void), int arg)
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-static PID Task_Create_RR(void (*f)(void), int arg)
+PID Task_Create_RR(void (*f)(void), int arg)
 {
-
+	PID pid = 1;
+	return pid;
 }
 
 
@@ -85,9 +95,10 @@ static PID Task_Create_RR(void (*f)(void), int arg)
  *	Return:
  *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-static PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
+PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
 {
-
+	PID pid = 1;
+	return pid;
 }
 
 
@@ -101,7 +112,7 @@ static PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, 
  *	Return:
  *		void
  */
-static void Task_Next(void)
+void Task_Next(void)
 {
 
 }
@@ -117,9 +128,9 @@ static void Task_Next(void)
  *	Return:
  *		int - The arg that was used when creating the task.
  */
-static int Task_GetArg(void)
+int Task_GetArg(void)
 {
-
+	return 1;
 }
 
 
@@ -133,9 +144,10 @@ static int Task_GetArg(void)
  *	Return:
  *		CHAN - An initialized channel if successful, otherwise NULL.
  */
-static CHAN Chan_Init()
+CHAN Chan_Init()
 {
-
+	CHAN ch = 1;
+	return ch;
 }
 
 
@@ -153,7 +165,7 @@ static CHAN Chan_Init()
  *	Return:
  *		void
  */
-static void Send(CHAN ch, int v)
+void Send(CHAN ch, int v)
 {
 
 }
@@ -171,9 +183,9 @@ static void Send(CHAN ch, int v)
  *	Return:
  *		int		- The message that was received.
  */
-static int Recv(CHAN ch)
+int Recv(CHAN ch)
 {
-
+	return 1;
 }
 
 
@@ -190,7 +202,7 @@ static int Recv(CHAN ch)
  *	Return:
  *		void
  */
-static void Write(CHAN ch, int v)
+void Write(CHAN ch, int v)
 {
 
 }
@@ -206,7 +218,7 @@ static void Write(CHAN ch, int v)
  *	Return:
  *		unsigned int - The number of milliseconds since OS_Init().
  */
-static unsigned int Now()
+unsigned int Now()
 {
-
+	return 1;
 }

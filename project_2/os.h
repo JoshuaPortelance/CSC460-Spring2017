@@ -43,8 +43,8 @@ void OS_Abort(unsigned int error);
  * or yield.
  */
 
-PID   Task_Create_System(void (*f)(void), int arg);
-PID   Task_Create_RR(    void (*f)(void), int arg);
+PID Task_Create_System(void (*f)(void), int arg);
+PID Task_Create_RR(void (*f)(void), int arg);
 
  /*
   * f a parameterless function to be created as a process instance
@@ -54,7 +54,7 @@ PID   Task_Create_RR(    void (*f)(void), int arg);
   * offset its start time in TICKs
   * returns 0 if not successful; otherwise a non-zero PID.
   */
-PID   Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
+PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
 
 // NOTE: When a task function returns, it terminates automatically!!
 
@@ -66,7 +66,7 @@ void Task_Next(void);
 
 
 // The calling task gets its initial "argument" when it was created.
-int  Task_GetArg(void);
+int Task_GetArg(void);
 
 /*
  * A CHAN is a one-way communication channel between at least two tasks. It must be
@@ -94,8 +94,8 @@ CHAN Chan_Init();
  * Periodic tasks are NOT allowed to use blocking Send() or Recv().
  * 
  */
-void Send( CHAN ch, int v );  // blocking send on CHAN
-int Recv( CHAN ch );          // blocking receive on CHAN
+void Send(CHAN ch, int v);  // blocking send on CHAN
+int Recv(CHAN ch);          // blocking receive on CHAN
 
 /*
  * A sender may not be willing to wait for one or more receiver to communicate.
@@ -108,7 +108,7 @@ int Recv( CHAN ch );          // blocking receive on CHAN
  *
  * Note: It is possible that an ISR may use Write() to resume a waiting receiving task.
  */
-void Write( CHAN ch, int v );   // non-blocking send on CHAN
+void Write(CHAN ch, int v);   // non-blocking send on CHAN
 
 
 /**  
