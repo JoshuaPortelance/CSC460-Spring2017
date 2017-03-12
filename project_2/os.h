@@ -3,25 +3,26 @@
 #define _OS_H_  
    
 #define MAXTHREAD     16       
-#define WORKSPACE     256   // in bytes, per THREAD
+#define WORKSPACE     256	//	In bytes, per THREAD.
 #define MAXCHAN       16
-#define MSECPERTICK   10   // resolution of a system TICK in milliseconds
+#define MSECPERTICK   10	//	Resolution of a system TICK in milliseconds.
 
 #ifndef NULL
-#define NULL          0   /* undefined */
+#define NULL          0		//	Undefined.
 #endif
 #define TRUE          1
 #define FALSE         0
 
 
-typedef unsigned int PID;        // always non-zero if it is valid
-typedef unsigned int CHAN;       // always non-zero if it is valid
-typedef unsigned int TICK;       // 1 TICK is defined by MSECPERTICK
-typedef unsigned int BOOL;       // TRUE or FALSE
+typedef unsigned int PID;	//	Always non-zero if it is valid.
+typedef unsigned int CHAN;	//	Always non-zero if it is valid.
+typedef unsigned int TICK;	//	1 TICK is defined by MSECPERTICK.
+typedef unsigned int BOOL;	//	TRUE or FALSE.
 
-
-// Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
-// will be stopped.
+/*
+ *	Aborts the RTOS and enters a "non-executing" state with an error code.
+ *	That is, all tasks will be stopped.
+ */
 void OS_Abort(unsigned int error);
 
 /*
@@ -56,16 +57,18 @@ PID Task_Create_RR(void (*f)(void), int arg);
   */
 PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
 
-// NOTE: When a task function returns, it terminates automatically!!
+//	NOTE: When a task function returns, it terminates automatically!!
 
-// When a Periodic ask calls Task_Next(), it will resume at the beginning of its next period.
-// When a RR or System task calls Task_Next(), it voluntarily gives up execution and 
-// re-enters the ready state. All RR and Systems tasks are first-come-first-served.
-//   
+/*
+ *	When a Periodic ask calls Task_Next(), it will resume at the beginning of its next period.
+ *	When a RR or System task calls Task_Next(), it voluntarily gives up execution and
+ *	re-enters the ready state. All RR and Systems tasks are first-come-first-served.
+ */  
 void Task_Next(void);
 
-
-// The calling task gets its initial "argument" when it was created.
+/*
+ *	The calling task gets its initial "argument" when it was created.
+ */
 int Task_GetArg(void);
 
 /*
@@ -73,7 +76,6 @@ int Task_GetArg(void);
  * initialized before its use. Chan_Init() returns a CHAN if successful; otherwise
  * it returns NULL.
  */
-
 CHAN Chan_Init();
 
 /*
@@ -111,24 +113,24 @@ int Recv(CHAN ch);          // blocking receive on CHAN
 void Write(CHAN ch, int v);   // non-blocking send on CHAN
 
 
-/**  
-  * Returns the number of milliseconds since OS_Init(). Note that this number
-  * wraps around after it overflows as an unsigned integer. The arithmetic
-  * of 2's complement will take care of this wrap-around behavior if you use
-  * this number correctly.
-  * Let  T = Now() and we want to know when Now() reaches T+1000.
-  * Now() is always increasing. Even if Now() wraps around, (Now() - T) always
-  * >= 0. As long as the duration of interest is less than the wrap-around time,
-  * then (Now() - T >= 1000) would mean we have reached T+1000.
-  * However, we cannot compare Now() against T directly due to this wrap-around
-  * behavior.
-  * Now() will wrap around every 65536 milliseconds. Therefore, for measurement
-  * purposes, it should be used for durations less than 65 seconds.
-  */
+/*
+ * Returns the number of milliseconds since OS_Init(). Note that this number
+ * wraps around after it overflows as an unsigned integer. The arithmetic
+ * of 2's complement will take care of this wrap-around behavior if you use
+ * this number correctly.
+ * Let  T = Now() and we want to know when Now() reaches T+1000.
+ * Now() is always increasing. Even if Now() wraps around, (Now() - T) always
+ * >= 0. As long as the duration of interest is less than the wrap-around time,
+ * then (Now() - T >= 1000) would mean we have reached T+1000.
+ * However, we cannot compare Now() against T directly due to this wrap-around
+ * behavior.
+ * Now() will wrap around every 65536 milliseconds. Therefore, for measurement
+ * purposes, it should be used for durations less than 65 seconds.
+ */
 unsigned int Now();  // number of milliseconds since the RTOS boots.
 
 
-/**
+/*
  * Booting:
  *  The RTOS and the main application are compiled into a single executable binary, but
  *  otherwise they are totally independent.

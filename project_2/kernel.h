@@ -20,14 +20,15 @@
 /*
  * Type Definitions.
  */
-typedef void (*voidfuncptr) (void);	/* pointer to void f(void) */
+typedef void (*voidfuncptr) (void);	//	Pointer to void f(void).
 
 typedef enum process_states
 {
 	DEAD = 0,
 	BLOCKED,
 	READY,
-	RUNNING
+	RUNNING,
+	WAITING
 } PROCESS_STATES;
 
 typedef enum kernel_request_type
@@ -39,6 +40,7 @@ typedef enum kernel_request_type
 	CREATERR,
 	NEXT,
 	TERMINATE,
+	CHANINIT,
 	SEND,
 	RECV,
 	WRITE
@@ -56,20 +58,19 @@ typedef enum process_priorities
  */
 typedef struct process_descriptor
 {
-	unsigned char *sp;	/* stack pointer into the "workSpace" */
-	unsigned char workSpace[WORKSPACE];
-	PROCESS_STATES state;
-	voidfuncptr  code;	/* function to be executed as a task */
-	KERNEL_REQUEST_TYPE request;
-	int creation_arg;
-	int pid;
-	ERROR_CODE error;
-	PROCESS_PRIORITIES priority;
-	TICK period;
-	TICK wcet;
-	TICK offset;
-	unsigned int start_time;
-	unsigned int num_runs;
+	unsigned char*		sp;		//	Stack pointer into the "workSpace".
+	unsigned char		workSpace[WORKSPACE];
+	PROCESS_STATES		state;
+	voidfuncptr			code;	//	Function to be executed as a task.
+	KERNEL_REQUEST_TYPE	request;
+	int					creation_arg;
+	int					pid;
+	ERROR_CODE			error;
+	PROCESS_PRIORITIES	priority;
+	TICK				period;
+	TICK				wcet;
+	TICK				offset;
+	unsigned int		num_ticks_remaining;
 } PD;
 
 #endif /* _KERNEL_H */

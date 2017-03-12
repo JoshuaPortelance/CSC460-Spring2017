@@ -45,7 +45,6 @@ void Ping()
 	}
 }
 
-
 /**
   * A cooperative "Pong" task.
   * Added testing code for LEDs.
@@ -60,10 +59,30 @@ void Pong()
 	}
 }
 
+void ToggleLED()
+{
+	init_LED();
+	for(;;) {
+		PORTB ^= 0b10000000;
+		Task_Next();
+	}
+}
+
 unsigned int main_a(void)
 {
 	// Create all tasks.
+
+	/* This is working!!!!
+	Task_Create_System(Ping, 1);
+	Task_Create_System(Pong, 2);
+	*/
+
+	/* This is working!!!!
 	Task_Create_RR(Ping, 1);
 	Task_Create_RR(Pong, 2);
+	*/
+
+	// This is working!!!!
+	Task_Create_Period(ToggleLED, 1, 20, 1, 20);
 	return 0;
 }
