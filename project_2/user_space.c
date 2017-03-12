@@ -40,7 +40,7 @@ void Ping()
 	init_LED();
 	for(;;) {
 		enable_LED();
-		_delay_ms(25);
+		_delay_ms(50);
 		Task_Next();
 	}
 }
@@ -55,7 +55,7 @@ void Pong()
 	init_LED();
 	for(;;) {
 		disable_LED();
-		_delay_ms(25);
+		_delay_ms(50);
 		Task_Next();
 	}
 }

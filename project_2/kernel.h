@@ -38,12 +38,10 @@ typedef enum kernel_request_type
 	CREATEPD,
 	CREATERR,
 	NEXT,
-	GETARG,
 	TERMINATE,
 	SEND,
 	RECV,
-	WRITE,
-	NOW
+	WRITE
 } KERNEL_REQUEST_TYPE;
 
 typedef enum process_priorities
@@ -70,6 +68,8 @@ typedef struct process_descriptor
 	TICK period;
 	TICK wcet;
 	TICK offset;
+	unsigned int start_time;
+	unsigned int num_runs;
 } PD;
 
 #endif /* _KERNEL_H */

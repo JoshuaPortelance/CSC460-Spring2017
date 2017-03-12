@@ -23,14 +23,17 @@ static PD Process[MAXTHREAD];
 static PD* system_queue[MAXTHREAD];
 volatile static unsigned int system_queue_front = 0;
 volatile static unsigned int system_queue_rear = -1;
+volatile static unsigned int system_queue_size = 0;
 
 static PD* periodic_queue[MAXTHREAD];
 volatile static unsigned int periodic_queue_front = 0;
 volatile static unsigned int periodic_queue_rear = -1;
+volatile static unsigned int periodic_queue_size = 0;
 
 static PD* rr_queue[MAXTHREAD];
 volatile static unsigned int rr_queue_front = 0;
 volatile static unsigned int rr_queue_rear = -1;
+volatile static unsigned int rr_queue_size = 0;
 
 static PD* periodic_lookup[MAXTHREAD];
 
@@ -44,6 +47,8 @@ volatile static unsigned int Tasks;
 volatile static unsigned int Periodic_Tasks;
 volatile static unsigned int System_Tasks;
 volatile static unsigned int RR_Tasks;
+
+volatile static unsigned int current_time;	//	The current time in milliseconds since Kernel_OS_Init.
 
 /*
  * API Function Prototypes.
@@ -81,7 +86,6 @@ volatile static unsigned int RR_Tasks;
 	PID  Kernel_Task_Create_Round_Robin(void (*f)(void), int arg);
 	PID  Kernel_Task_Create_Periodic(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
 	void Kernel_Create_Task_At(PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIORITIES priority, TICK period, TICK wcet, TICK offset);
-	int  Kernel_Task_GetArg(void);
 	void Kernel_Task_Terminate(void);
 
 	// Channel functions.
@@ -321,14 +325,14 @@ void Write(CHAN ch, int v)
 /*
  *	Now
  *
- *	Returns the number of milliseconds since OS_Init().
+ *	Returns the number of milliseconds since Kernel_OS_Init().
  *
  *	Return:
- *		unsigned int - The number of milliseconds since OS_Init().
+ *		unsigned int - The number of milliseconds since Kernel_OS_Init().
  */
 unsigned int Now()
 {
-	return 1;
+	return current_time;
 }
 
 /*
@@ -352,10 +356,112 @@ void Kernel_OS_Init(void)
 	Periodic_Tasks = 0;
 	System_Tasks = 0;
 	RR_Tasks = 0;
+	current_time = 0;
+
 	//Reminder: Clear the memory for the task on creation.
 	for (x = 0; x < MAXTHREAD; x++) {
 		memset(&(Process[x]),0,sizeof(PD));
 		Process[x].state = DEAD;
+	}
+
+	/* Initialize timer ISR for 1kHz */
+	Disable_Interrupt();
+	TCCR3A = 0;
+	TCCR3B = 0;
+	TCNT3 = 0;				//Set timer to 0
+	TCCR3B |= (1<<WGM12);	//Set to CTC (mode 4)
+	TCCR3B |= (1<<CS12);	//Set to 256 prescaler
+	OCR3A = 62500;			//Setting timer target
+	TIMSK3 |= (1<<OCIE3A);	//Enable interrupt A for timer 3.
+
+	/* Initialize priority task scheduler ISR for 100Hz */
+	TCCR4A = 0;
+	TCCR4B = 0;
+	TCNT4 = 0;				//Set timer to 0
+	TCCR4B |= (1<<WGM12);	//Set to CTC (mode 4)
+	TCCR4B |= (1<<CS12);	//Set to 256 prescaler
+	OCR4A = 625;			//Setting timer target
+	TIMSK4 |= (1<<OCIE4A);	//Enable interrupt A for timer 4.
+	Enable_Interrupt();
+}
+
+/*
+ *	ISR to:
+ *		- keep track of milliseconds sense Kernel_OS_Init.
+ *		- monitoring for preemption and acting on preemption.
+ *		- 
+ */
+ISR(TIMER3_COMPA_vect)
+{
+	int preempted = 0;
+	current_time++; //Update timer.
+
+	//Check and act on preemption.
+	if(Cp->priority == ROUNDROBIN && (System_Tasks > 0 || Periodic_Tasks > 0))
+	{
+		Cp->state = READY;
+		preempted = 1;
+	}
+	else if(Cp->priority == PERIODIC && System_Tasks > 0)
+	{
+		Cp->state = READY;
+		preempted = 1;
+	}
+
+	//End any RR going over 1 TICK.
+	if(Cp->priority == ROUNDROBIN && (Cp->start_time - current_time) >= MSECPERTICK)
+	{
+		Cp->state = READY;
+		preempted = 1;
+	}
+
+	//Reschedule if preempted.
+	if(preempted == 1)
+	{
+		switch(Cp->priority)
+		{
+			case SYSTEM:
+				enqueue_system(Cp);
+				break;
+			case PERIODIC:
+				enqueue_periodic(Cp);
+				break;
+			case ROUNDROBIN:
+				enqueue_rr(Cp);
+				break;
+			default:
+				Kernel_OS_Abort(DEFUALT_PRIORITY);
+				break;
+		}
+		Task_Next();
+	}
+}
+
+/*
+ *	ISR to check for periodic functions that should be set to ready.
+ *	Also checks if a currently running task should be preempted.
+ */
+ISR(TIMER4_COMPA_vect)
+{
+	int i;
+	for(i = 0; i < Periodic_Tasks; i++)
+	{
+		if(periodic_lookup[i]->num_runs == 0)
+		{
+			if((current_time - (periodic_lookup[i]->offset * 10)) > 0)
+			{
+				periodic_lookup[i]->state = READY;
+				enqueue_periodic(periodic_lookup[i]);
+			}
+		}
+		else
+		{
+			if((periodic_lookup[i]->start_time - current_time) >= (periodic_lookup[i]->period * 10))
+			{
+				periodic_lookup[i]->state = READY;
+				enqueue_periodic(periodic_lookup[i]);
+			}
+		}
 	}
 }
 
@@ -480,15 +586,9 @@ void Kernel_Request_Handler(void)
 				Cp->state = DEAD;
 				Kernel_Dispatch();
 				break;
-			case GETARG:
-				Kernel_Task_GetArg();
-				break;
 			case SEND:
 			case RECV:
 			case WRITE:
-			case NOW:
-				Kernel_Task_GetArg();
-				break;
 			default:
 				/* Houston! we have a problem here! */
 				Cp->error = DEFUALT_REQUEST;
@@ -514,16 +614,20 @@ void Kernel_Dispatch(void)
 		NextP = (NextP + 1) % MAXTHREAD;
 	}
 	*/
+	if(periodic_queue_size > 1)
+	{
+		Kernel_OS_Abort(MILTIPLE_READY_PERIODIC_TASKS);
+	}
 
-	if(System_Tasks > 0)
+	if(system_queue_size > 0)
 	{
 		Cp = dequeue_system();
 	}
-	else if(Periodic_Tasks > 0)
+	else if(periodic_queue_size > 0)
 	{
 		Cp = dequeue_periodic();
 	}
-	else if(RR_Tasks > 0)
+	else if(rr_queue_size > 0)
 	{
 		Cp = dequeue_rr();
 	}
@@ -537,6 +641,8 @@ void Kernel_Dispatch(void)
 	//Cp = &(Process[NextP]);
 	CurrentSp = Cp->sp;
 	Cp->state = RUNNING;
+	Cp->start_time = Now();
+	Cp->num_runs++;
 
 	NextP = (NextP + 1) % MAXTHREAD;
 }
@@ -590,13 +696,15 @@ void Kernel_Create_Task_At(PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIOR
 	p->wcet = wcet;
 	p->offset =offset;
 	p->state = READY;
+	p->start_time = 0;
+	p->num_runs = 0;
 	switch(p->priority)
 	{
 		case SYSTEM:
 			enqueue_system(p);
 			break;
 		case PERIODIC:
-			periodic_lookup[Periodic_Tasks] = p;
+			periodic_lookup[Periodic_Tasks++] = p;
 			enqueue_periodic(p);
 			break;
 		case ROUNDROBIN:
@@ -635,6 +743,7 @@ PID Kernel_Task_Create_System(void (*f)(void), int arg)
 	}
 
 	++Tasks;
+	++System_Tasks;
 	Kernel_Create_Task_At(&(Process[x]), f, arg, x, SYSTEM, 0, 0, 0);
 	return x;
 }
@@ -666,6 +775,7 @@ PID Kernel_Task_Create_Round_Robin(void (*f)(void), int arg)
 	}
 
 	++Tasks;
+	++RR_Tasks;
 	Kernel_Create_Task_At(&(Process[x]), f, arg, x, ROUNDROBIN, 0, 0, 0);
 	return x;
 }
@@ -705,19 +815,6 @@ PID Kernel_Task_Create_Periodic(void (*f)(void), int arg, TICK period, TICK wcet
 }
 
 /*
- *	Kernel_Task_GetArg
- *
- *	Gets the integer that was assigned to the task when created.
- *
- *	Return:
- *		int - The arg that was used when creating the task.
- */
-int Kernel_Task_GetArg(void)
-{
-	return 1;
-}
-
-/*
  *	Kernel_Task_Terminate
  *
  *	Terminates the calling task.
@@ -743,6 +840,7 @@ void Kernel_Task_Terminate()
 				Kernel_OS_Abort(DEFUALT_PRIORITY);
 				break;
 	  }
+	  Tasks--;
       Enter_Kernel();
      /* never returns here! */
    }
@@ -816,19 +914,6 @@ void Kernel_Write(CHAN ch, int v)
 }
 
 /*
- *	Kernel_Now
- *
- *	Returns the number of milliseconds since OS_Init().
- *
- *	Return:
- *		unsigned int - The number of milliseconds since OS_Init().
- */
-unsigned int Kernel_Now()
-{
-	return 1;
-}
-
-/*
  *	enqueue_system
  *
  *	Enqueues the PD of a ready system task into the system ready queue.
@@ -838,7 +923,7 @@ unsigned int Kernel_Now()
  */
 void enqueue_system(PD* p)
 {
-	if(System_Tasks < MAXTHREAD)
+	if(system_queue_size < MAXTHREAD)
 	{
 		if(system_queue_rear == MAXTHREAD - 1)
 		{
@@ -846,7 +931,7 @@ void enqueue_system(PD* p)
 		}
 
 		system_queue[++system_queue_rear] = p;
-		System_Tasks++;
+		system_queue_size++;
 	}
 }
 
@@ -867,7 +952,7 @@ PD* dequeue_system(void)
 		system_queue_front = 0;
 	}
 
-	System_Tasks--;
+	system_queue_size--;
 	return p;
 }
 
@@ -881,7 +966,7 @@ PD* dequeue_system(void)
  */
 void enqueue_periodic(PD* p)
 {
-	if(Periodic_Tasks < MAXTHREAD)
+	if(periodic_queue_size < MAXTHREAD)
 	{
 		if(periodic_queue_rear == MAXTHREAD - 1)
 		{
@@ -889,7 +974,7 @@ void enqueue_periodic(PD* p)
 		}
 
 		periodic_queue[++periodic_queue_rear] = p;
-		Periodic_Tasks++;
+		periodic_queue_size++;
 	}
 }
 
@@ -910,7 +995,7 @@ PD* dequeue_periodic(void)
 		periodic_queue_front = 0;
 	}
 
-	Periodic_Tasks--;
+	periodic_queue_size--;
 	return p;
 }
 
@@ -924,7 +1009,7 @@ PD* dequeue_periodic(void)
  */
 void enqueue_rr(PD* p)
 {
-	if(RR_Tasks < MAXTHREAD)
+	if(rr_queue_size < MAXTHREAD)
 	{
 		if(rr_queue_rear == MAXTHREAD - 1)
 		{
@@ -932,7 +1017,7 @@ void enqueue_rr(PD* p)
 		}
 
 		rr_queue[++rr_queue_rear] = p;
-		RR_Tasks++;
+		rr_queue_size++;
 	}
 }
 
@@ -953,7 +1038,7 @@ PD* dequeue_rr(void)
 		rr_queue_front = 0;
 	}
 
-	RR_Tasks--;
+	rr_queue_size--;
 	return p;
 }
 
