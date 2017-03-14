@@ -15,6 +15,20 @@
 #include "error_codes.h"
 #include "user_space.h"
 
+BOOL debug = FALSE;		// If DEBUG is true, then PORTB will be used to display timings.
+/*
+	DDRC   = 0b1111111
+	PORTC
+	Pin 37 - Bit 0 - Kernel_Idle_Task
+	Pin 36 - Bit 1 - 1kHz ISR
+	Pin 35 - Bit 2 - 100Hz ISR
+	Pin 34 - Bit 3 - Kernel_Request_Handler
+	Pin 33 - Bit 4 - Kernel_Dispatch
+	Pin 32 - Bit 5 - 
+	Pin 31 - Bit 6 - 
+	Pin 30 - Bit 7 - 
+*/
+
 /*
  * Globals.
  */
@@ -370,6 +384,8 @@ void Kernel_OS_Init(void)
 {
     int x;
 
+	if(debug){DDRC = 0b11111111;}
+
     Tasks = 0;
     KernelActive = 0;
     Periodic_Tasks = 0;
@@ -414,6 +430,11 @@ void Kernel_OS_Init(void)
  */
 ISR(TIMER3_COMPA_vect)
 {
+	if(debug)
+	{
+		PORTC ^= 0b00000010;
+	}
+
     int preempted = 0;
     current_time++;    // Update timer.
 
@@ -468,6 +489,11 @@ ISR(TIMER3_COMPA_vect)
         }
         Task_Next();
     }
+
+	if(debug)
+	{
+		PORTC ^= 0b00000010;
+	}
 }
 
 /*
@@ -477,6 +503,11 @@ ISR(TIMER3_COMPA_vect)
  */
 ISR(TIMER4_COMPA_vect)
 {
+	if(debug)
+	{
+		PORTC ^= 0b00000100;
+	}
+
     // Updating periodic num_remaining_ticks and checking for any that are zero.
     int i;
     for(i = 0; i < Periodic_Tasks; i++)
@@ -498,6 +529,11 @@ ISR(TIMER4_COMPA_vect)
             }
         }
     }
+
+	if(debug)
+	{
+		PORTC ^= 0b00000100;
+	}
 }
 
 /*
@@ -553,7 +589,12 @@ void Kernel_Idle_Task(void)
 {
     for (;;)
     {
-        //Task_Next();
+		if(debug)
+		{
+		    PORTC ^= 0b00000001;
+			PORTC ^= 0b00000001;
+		}
+        Task_Next();
     }
 }
 
@@ -573,9 +614,19 @@ void Kernel_Request_Handler(void)
 
         // Activate this newly selected task.
         CurrentSp = Cp->sp;
+
+		if(debug)
+		{
+			PORTC ^= 0b00001000;
+		}
+
         Exit_Kernel();
 
         // If this new task makes a system call, it will return to here!
+		if(debug)
+		{
+			PORTC ^= 0b00001000;
+		}
 
         // Save CP's stack pointer.
         Cp->sp = CurrentSp;
@@ -643,6 +694,11 @@ void Kernel_Request_Handler(void)
  */
 void Kernel_Dispatch(void)
 {
+	if(debug)
+	{
+		PORTC ^= 0b00010000;
+	}
+
     // Find the next READY task.
     if(system_queue_size > 0)
     {
@@ -660,6 +716,11 @@ void Kernel_Dispatch(void)
 
     CurrentSp = Cp->sp;
     Cp->state = RUNNING;
+
+	if(debug)
+	{
+		PORTC ^= 0b00010000;
+	}
 }
 
 /*
