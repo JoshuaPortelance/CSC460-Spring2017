@@ -5,7 +5,7 @@
  *  Author: Josh
  */
 
-#define F_CPU 16000000L	// Specify oscillator frequency
+#define F_CPU 16000000L	    // Specify oscillator frequency
 #include <util/delay.h>
 #include <avr/io.h>
 #include "os.h"
@@ -83,6 +83,6 @@ unsigned int main_a(void)
 	*/
 
 	// This is working!!!!
-	Task_Create_Period(ToggleLED, 1, 20, 1, 20);
+	Task_Create_Period(ToggleLED, 1, 2, 1, 20);
 	return 0;
 }
