@@ -65,12 +65,23 @@ typedef struct process_descriptor
 	KERNEL_REQUEST_TYPE	request;
 	int					creation_arg;
 	int					pid;
+	unsigned int		return_value;
 	ERROR_CODE			error;
 	PROCESS_PRIORITIES	priority;
 	TICK				period;
 	TICK				wcet;
 	TICK				offset;
 	unsigned int		num_ticks_remaining;
+	CHAN				channel;
+	int					message;
 } PD;
+
+typedef struct channel_descriptor
+{
+	CHAN number;
+	PD* sender;
+	unsigned int num_receivers;
+	PD* receivers[MAXTHREAD];
+} CHAND;
 
 #endif /* _KERNEL_H */

@@ -19,6 +19,7 @@
  * Globals.
  */
 static PD Process[MAXTHREAD];
+static CHAND channel_descriptors[MAXCHAN];
 
 static PD* system_queue[MAXTHREAD];
 volatile static unsigned int system_queue_front = 0;
@@ -42,22 +43,23 @@ volatile static unsigned int Tasks;
 volatile static unsigned int Periodic_Tasks;
 volatile static unsigned int System_Tasks;
 volatile static unsigned int RR_Tasks;
+volatile static unsigned int Channels;
 
 volatile static unsigned int current_time;	//	The current time in milliseconds since Kernel_OS_Init.
 
 /*
  * API Function Prototypes.
- */
-	void OS_Abort(unsigned int error);
-	PID Task_Create_System(void (*f)(void), int arg);
-	PID Task_Create_RR(void (*f)(void), int arg);
-	PID Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
-	void Task_Next(void);
-	int Task_GetArg(void);
-	CHAN Chan_Init();
-	void Send(CHAN ch, int v);
-	int Recv(CHAN ch);
-	void Write(CHAN ch, int v);
+ */	
+	void		 OS_Abort(unsigned int error);
+	PID			 Task_Create_System(void (*f)(void), int arg);
+	PID			 Task_Create_RR(void (*f)(void), int arg);
+	PID			 Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
+	void		 Task_Next(void);
+	int			 Task_GetArg(void);
+	CHAN		 Chan_Init();
+	void		 Send(CHAN ch, int v);
+	int			 Recv(CHAN ch);
+	void		 Write(CHAN ch, int v);
 	unsigned int Now();
 
 /*
@@ -77,26 +79,23 @@ volatile static unsigned int current_time;	//	The current time in milliseconds s
 	void Kernel_Dispatch(void);
 
 	//	Task functions.
-	PID  Kernel_Task_Create_System(void (*f)(void), int arg);
-	PID  Kernel_Task_Create_Round_Robin(void (*f)(void), int arg);
-	PID  Kernel_Task_Create_Periodic(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
-	void Kernel_Create_Task_At(PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIORITIES priority, TICK period, TICK wcet, TICK offset);
+	void Kernel_Task_Create_System(void (*f)(void), int arg);
+	void Kernel_Task_Create_Round_Robin(void (*f)(void), int arg);
+	void Kernel_Task_Create_Periodic(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
+	void Kernel_Create_Task_At(volatile PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIORITIES priority, TICK period, TICK wcet, TICK offset);
 	void Kernel_Task_Terminate(void);
 
 	//	Channel functions.
-	CHAN Kernel_Chan_Init();
+	void Kernel_Chan_Init();
 	void Kernel_Send(CHAN ch, int v);
-	int  Kernel_Recv(CHAN ch);
+	void Kernel_Recv(CHAN ch);
 	void Kernel_Write(CHAN ch, int v);
 
-	//	Timing functions.
-	unsigned int Kernel_Now();
-
 	//	Queue functions.
-	void enqueue_system(PD* p);
-	PD* dequeue_system(void);
-	void enqueue_rr(PD* p);
-	PD* dequeue_rr(void);
+	void enqueue_system(volatile PD* p);
+	PD*  dequeue_system(void);
+	void enqueue_rr(volatile PD* p);
+	PD*  dequeue_rr(void);
 
 /*
  * API Functions.
@@ -257,12 +256,19 @@ int Task_GetArg(void)
  *	Initializes a channel.
  *
  *	Return:
- *		CHAN - An initialized channel if successful, otherwise NULL.
+ *		CHAN - Zero if unsuccessful, otherwise a positive integer representing the channel number.
  */
 CHAN Chan_Init()
 {
-	CHAN ch = 1;
-	return ch;
+	if (KernelActive)
+	{
+		Disable_Interrupt();
+		Cp->request = CHANINIT;
+		Enter_Kernel();
+	}
+	int temp_return_value = Cp->return_value;
+	Cp->return_value = 0;
+	return temp_return_value;
 }
 
 /*
@@ -279,7 +285,14 @@ CHAN Chan_Init()
  */
 void Send(CHAN ch, int v)
 {
-
+	if (KernelActive)
+	{
+		Disable_Interrupt();
+		Cp->channel = ch;
+		Cp->message = v;
+		Cp->request = SEND;
+		Enter_Kernel();
+	}
 }
 
 /*
@@ -296,7 +309,14 @@ void Send(CHAN ch, int v)
  */
 int Recv(CHAN ch)
 {
-	return 1;
+	if (KernelActive)
+	{
+		Disable_Interrupt();
+		Cp->channel = ch;
+		Cp->request = RECV;
+		Enter_Kernel();
+	}
+	return Cp->message;
 }
 
 /*
@@ -312,7 +332,14 @@ int Recv(CHAN ch)
  */
 void Write(CHAN ch, int v)
 {
-
+	if (KernelActive)
+	{
+		Disable_Interrupt();
+		Cp->channel = ch;
+		Cp->message = v;
+		Cp->request = WRITE;
+		Enter_Kernel();
+	}
 }
 
 /*
@@ -349,6 +376,7 @@ void Kernel_OS_Init(void)
 	System_Tasks = 0;
 	RR_Tasks = 0;
 	current_time = 0;
+	Channels = 0;
 	ready_periodic_task = NULL;
 
 	//	Reminder: Clear the memory for the task on creation.
@@ -357,7 +385,6 @@ void Kernel_OS_Init(void)
 		Process[x].state = DEAD;
 	}
 
-	
 	//	Initialize timer ISR for 1kHz.
 	Disable_Interrupt();
 	TCCR3A = 0;
@@ -594,9 +621,13 @@ void Kernel_Request_Handler(void)
 				Kernel_Dispatch();
 				break;
 			case CHANINIT:
+				Kernel_Chan_Init();
 			case SEND:
+				Kernel_Send(Cp->channel, Cp->message);
 			case RECV:
+				Kernel_Recv(Cp->channel);
 			case WRITE:
+				Kernel_Write(Cp->channel, Cp->message);
 			default:
 				//	Houston! we have a problem here!
 				Kernel_OS_Abort(DEFUALT_REQUEST);
@@ -647,7 +678,7 @@ void Kernel_Dispatch(void)
  *		TICK wcet					- The worse case running time of the task. If periodic priority, else 0.
  *		TICK offset					- The offset of the new task. If periodic priority, else 0.
  */
-void Kernel_Create_Task_At(PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIORITIES priority, TICK period, TICK wcet, TICK offset)
+void Kernel_Create_Task_At(volatile PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIORITIES priority, TICK period, TICK wcet, TICK offset)
 {
 	unsigned char *sp;
 
@@ -660,6 +691,9 @@ void Kernel_Create_Task_At(PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIOR
 	//	Store terminate at the bottom of stack to protect against stack under run.
 	*(unsigned char *)sp-- = ((unsigned int)Kernel_Task_Terminate) & 0xff;
 	*(unsigned char *)sp-- = (((unsigned int)Kernel_Task_Terminate) >> 8) & 0xff;
+	
+	//	This catches Tasks that returned instead of looping forever.
+	*(unsigned char *)sp-- = 0;
 
 	//	Place return address of function at bottom of stack.
 	*(unsigned char *)sp-- = ((unsigned int)f) & 0xff;
@@ -711,26 +745,25 @@ void Kernel_Create_Task_At(PD *p, voidfuncptr f, int arg, PID pid, PROCESS_PRIOR
  *	Params:
  *		void (*f)(void) - Pointer to the function the tasks will run.
  *		int arg			- An integer number to be assigned to this process instance.
- *	Return:
- *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-PID Kernel_Task_Create_System(void (*f)(void), int arg)
+void Kernel_Task_Create_System(void (*f)(void), int arg)
 {
 	int x;
 
 	if (Tasks == MAXTHREAD)
 	{
-		return 0;  //	Too many task!
+		Cp->pid = 0;  //	Too many task!
 	}
-
-	//	Find a DEAD PD that we can use.
-	for (x = 0; x < MAXTHREAD; x++)
+	else
 	{
-		if (Process[x].state == DEAD) break;
-	}
+		//	Find a DEAD PD that we can use.
+		for (x = 0; x < MAXTHREAD; x++)
+		{
+			if (Process[x].state == DEAD) break;
+		}
 
-	Kernel_Create_Task_At(&(Process[x]), f, arg, x, SYSTEM, 0, 0, 0);
-	return x;
+		Kernel_Create_Task_At(&(Process[x]), f, arg, x, SYSTEM, 0, 0, 0);
+	}
 }
 
 /*
@@ -741,26 +774,25 @@ PID Kernel_Task_Create_System(void (*f)(void), int arg)
  *	Params:
  *		void (*f)(void) - Pointer to the function the tasks will run.
  *		int arg			- An integer number to be assigned to this process instance.
- *	Return:
- *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-PID Kernel_Task_Create_Round_Robin(void (*f)(void), int arg)
+void Kernel_Task_Create_Round_Robin(void (*f)(void), int arg)
 {
 	int x;
 
 	if (Tasks == MAXTHREAD)
 	{
-		return 0;  //	Too many task!
+		Cp->pid = 0;  //	Too many task!
 	}
-
-	//	Find a DEAD PD that we can use.
-	for (x = 0; x < MAXTHREAD; x++)
+	else
 	{
-		if (Process[x].state == DEAD) break;
-	}
+		//	Find a DEAD PD that we can use.
+		for (x = 0; x < MAXTHREAD; x++)
+		{
+			if (Process[x].state == DEAD) break;
+		}
 
-	Kernel_Create_Task_At(&(Process[x]), f, arg, x, ROUNDROBIN, 0, 0, 0);
-	return x;
+		Kernel_Create_Task_At(&(Process[x]), f, arg, x, ROUNDROBIN, 0, 0, 0);
+	}
 }
 
 /*
@@ -774,26 +806,25 @@ PID Kernel_Task_Create_Round_Robin(void (*f)(void), int arg)
  *		TICK period		- Tasks execution period in TICKs.
  *		TICK wcet		- Worst case execution time of the task in TICKs; must be less then period.
  *		TICK offset		- Tasks start offset in TICKs.
- *	Return:
- *		PID				- Zero if unsuccessful, otherwise a positive integer.
  */
-PID Kernel_Task_Create_Periodic(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
+void Kernel_Task_Create_Periodic(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset)
 {
 	int x;
 
 	if (Tasks == MAXTHREAD)
 	{
-		return 0;  //	Too many task!
+		Cp->pid = 0;  //	Too many task!
 	}
-
-	//	Find a DEAD PD that we can use.
-	for (x = 0; x < MAXTHREAD; x++)
+	else
 	{
-		if (Process[x].state == DEAD) break;
-	}
+		//	Find a DEAD PD that we can use.
+		for (x = 0; x < MAXTHREAD; x++)
+		{
+			if (Process[x].state == DEAD) break;
+		}
 
-	Kernel_Create_Task_At(&(Process[x]), f, arg, x, PERIODIC, period, wcet, offset);
-	return x;
+		Kernel_Create_Task_At(&(Process[x]), f, arg, x, PERIODIC, period, wcet, offset);
+	}
 }
 
 /*
@@ -831,14 +862,18 @@ void Kernel_Task_Terminate()
  *	Kernel_Chan_Init
  *
  *	Initializes a channel.
- *
- *	Return:
- *		CHAN - An initialized channel if successful, otherwise NULL.
  */
-CHAN Kernel_Chan_Init()
+void Kernel_Chan_Init()
 {
-	CHAN ch = 1;
-	return ch;
+	if(Channels >= MAXCHAN)
+	{
+		Cp->return_value = 0;	//	No more uninitialized channels.
+	}
+	channel_descriptors[Channels].sender = NULL;
+	channel_descriptors[Channels].num_receivers = 0;
+	Channels++;
+	channel_descriptors[Channels].number = Channels;
+	Cp->return_value = Channels;
 }
 
 
@@ -851,12 +886,59 @@ CHAN Kernel_Chan_Init()
  *		- Else the message will be sent over the channel and the task will not be blocked.
  *
  *	Params:
- *		CHAN ch	- Channel to send the message over.
+ *		CHAN ch	- The CHAN number to send the message over.
  *		int v	- Message to send over the channel.
  */
 void Kernel_Send(CHAN ch, int v)
 {
+	//	Error checking.
+	if(ch > MAXCHAN || ch < 1)
+	{
+		Kernel_OS_Abort(CHAN_NUM_OUT_OF_RANGE);
+	}
+	else if(ch > Channels)
+	{
+		Kernel_OS_Abort(CHAN_NOT_INITIALIZED);
+	}
+	else if(Cp->priority == PERIODIC)
+	{
+		Kernel_OS_Abort(PERIODIC_TASK_CALLING_BLOCKING_FUNCTION);
+	}
+	else if(channel_descriptors[ch].sender != NULL && channel_descriptors[ch].sender == Cp)
+	{
+		Kernel_OS_Abort(MULTIPLE_SENDERS);
+	}
 
+	channel_descriptors[ch].sender = Cp;
+	if(channel_descriptors[ch].num_receivers == 0)
+	{
+		Cp->state = BLOCKED;
+		Kernel_Dispatch();
+	}
+	else
+	{
+		int i;
+		for(i = channel_descriptors[ch].num_receivers - 1; i >= 0; i--)
+		{
+			channel_descriptors[ch].receivers[i]->state = READY;
+			channel_descriptors[ch].num_receivers--;
+			channel_descriptors[ch].receivers[i]->message = v;
+			switch(channel_descriptors[ch].receivers[i]->priority)
+			{
+				case SYSTEM:
+					enqueue_system(channel_descriptors[ch].receivers[i]);
+					break;
+				case ROUNDROBIN:
+					enqueue_rr(channel_descriptors[ch].receivers[i]);
+					break;
+				default:
+					Kernel_OS_Abort(DEFUALT_PRIORITY);
+					break;
+			}
+		}
+	}
+	channel_descriptors[ch].num_receivers = 0;
+	channel_descriptors[ch].sender = NULL;
 }
 
 
@@ -869,12 +951,33 @@ void Kernel_Send(CHAN ch, int v)
  *
  *	Params:
  *		CHAN ch	- The channel to receive a message over.
- *	Return:
- *		int		- The message that was received.
  */
-int Kernel_Recv(CHAN ch)
+void Kernel_Recv(CHAN ch)
 {
-	return 1;
+	//	Error checking.
+	if(ch > MAXCHAN || ch < 1)
+	{
+		Kernel_OS_Abort(CHAN_NUM_OUT_OF_RANGE);
+	}
+	else if(ch > Channels)
+	{
+		Kernel_OS_Abort(CHAN_NOT_INITIALIZED);
+	}
+	else if(Cp->priority == PERIODIC)
+	{
+		Kernel_OS_Abort(PERIODIC_TASK_CALLING_BLOCKING_FUNCTION);
+	}
+	
+	if(channel_descriptors[ch].sender == NULL)
+	{
+		channel_descriptors[ch].receivers[channel_descriptors[ch].num_receivers++] = Cp;
+		Cp->state = BLOCKED;
+		Kernel_Dispatch();
+	}
+	else
+	{
+		channel_descriptors[ch].sender->state = READY;
+	}
 }
 
 
@@ -891,7 +994,39 @@ int Kernel_Recv(CHAN ch)
  */
 void Kernel_Write(CHAN ch, int v)
 {
-
+	//	Error checking.
+	if(ch > MAXCHAN || ch < 1)
+	{
+		Kernel_OS_Abort(CHAN_NUM_OUT_OF_RANGE);
+	}
+	else if(ch > Channels)
+	{
+		Kernel_OS_Abort(CHAN_NOT_INITIALIZED);
+	}
+	else if(channel_descriptors[ch].sender != NULL)
+	{
+		Kernel_OS_Abort(MULTIPLE_SENDERS);
+	}
+	
+	int i;
+	for(i = channel_descriptors[ch].num_receivers - 1; i >= 0; i--)
+	{
+		channel_descriptors[ch].receivers[i]->state = READY;
+		channel_descriptors[ch].num_receivers--;
+		channel_descriptors[ch].receivers[i]->return_value = v;
+		switch(channel_descriptors[ch].receivers[i]->priority)
+		{
+			case SYSTEM:
+				enqueue_system(channel_descriptors[ch].receivers[i]);
+				break;
+			case ROUNDROBIN:
+				enqueue_rr(channel_descriptors[ch].receivers[i]);
+				break;
+			default:
+				Kernel_OS_Abort(DEFUALT_PRIORITY);
+				break;
+		}
+	}
 }
 
 /*
@@ -902,7 +1037,7 @@ void Kernel_Write(CHAN ch, int v)
  *	Params:
  *		PD* p - Pointer to the tasks process descriptor.
  */
-void enqueue_system(PD* p)
+void enqueue_system(volatile PD* p)
 {
 	if(system_queue_size < MAXTHREAD)
 	{
@@ -945,7 +1080,7 @@ PD* dequeue_system(void)
  *	Params:
  *		PD* p - Pointer to the tasks process descriptor.
  */
-void enqueue_rr(PD* p)
+void enqueue_rr(volatile PD* p)
 {
 	if(rr_queue_size < MAXTHREAD)
 	{
