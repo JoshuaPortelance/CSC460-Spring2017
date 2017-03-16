@@ -2,7 +2,7 @@
  * Test 04
  * Tests that the receivers wait until a sender is on the channel.
  * Once the sender comes and sends then the receivers start again,
- * in the order that they were blocked in. FIFO.
+ * in the order that they were blocked in.
  */
 
 #include "trace.h"
@@ -15,7 +15,7 @@ int count = 0;
 
 void test_results() {
 	char * trace = get_trace();
-	char * correct_trace = "(1,(2,(3,3),1),2),";
+	char * correct_trace = "(1,(2,(3,3),2),1),";
 	if (strcmp(correct_trace, trace) == 0) {
 		OS_Abort(TEST_PASS);
 	} else {
