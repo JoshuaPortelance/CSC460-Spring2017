@@ -6,28 +6,32 @@
  */
 
 #define F_CPU 16000000L    // Specify oscillator frequency
+
 #include <util/delay.h>
 #include <avr/io.h>
 #include <string.h>
 #include <avr/interrupt.h>
+
 #include "os.h"
 #include "kernel.h"
 #include "error_codes.h"
 #include "user_space.h"
 
-BOOL debug = FALSE;		// If DEBUG is true, then PORTB will be used to display timings.
-/*
-	DDRC   = 0b1111111
-	PORTC
-	Pin 37 - Bit 0 - Kernel_Idle_Task
-	Pin 36 - Bit 1 - 1kHz ISR
-	Pin 35 - Bit 2 - 100Hz ISR
-	Pin 34 - Bit 3 - Kernel_Request_Handler
-	Pin 33 - Bit 4 - Kernel_Dispatch
-	Pin 32 - Bit 5 - 
-	Pin 31 - Bit 6 - 
-	Pin 30 - Bit 7 - 
+//#include "02_order_of_rr.h" //Include a test file here. It will be called in main instead of the user space.
+
+/*  Debugging pins
+    DDRC   = 0b1111111
+    PORTC
+    Pin 37 - Bit 0 - Kernel_Idle_Task
+    Pin 36 - Bit 1 - 1kHz ISR
+    Pin 35 - Bit 2 - 100Hz ISR
+    Pin 34 - Bit 3 - Kernel_Request_Handler
+    Pin 33 - Bit 4 - Kernel_Dispatch
+    Pin 32 - Bit 5 - 
+    Pin 31 - Bit 6 - 
+    Pin 30 - Bit 7 - 
 */
+BOOL debug = FALSE;		// If DEBUG is true, then PORTB will be used to display timings as per the above comment.
 
 /*
  * Globals.
@@ -566,16 +570,18 @@ void Kernel_OS_Abort(unsigned int error)
 {
     // Initializing the on-board LED.
     DDRB    = 0b11111111;
-    PORTB    = 0b00000000;
+    PORTB   = 0b00000000;
     unsigned int i;
     for(;;)
     {
         PORTB    &= 0b01111111;        // Turn LED off.
         _delay_ms(5000);
-        for(i=0; i <= error; i++)
+        for(i=0; i < error; i++)
         {
-            PORTB    ^= 0b10000000;    // Toggle LED.
+            PORTB    |= 0b10000000;    // Turn LED On.
             _delay_ms(250);
+			PORTB    &= 0b01111111;    // Turn LED Off.
+			_delay_ms(250);
         }
     }
 }
@@ -1185,6 +1191,8 @@ int main(void)
 
     // Call user space main so all user tasks can be created.
     main_a();
+
+	//main_t(); This is to run the main of whichever test you included at the top of this file.
 
     // Start the OS. This should never return.
     Kernel_OS_Start();

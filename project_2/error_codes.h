@@ -10,6 +10,7 @@
 
 typedef enum error_code
 {
+	NO_ERROR = 0,
 	DEFUALT_REQUEST,
 	MULTIPLE_SENDERS,
 	DEFUALT_PRIORITY,
