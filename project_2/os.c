@@ -409,8 +409,8 @@ void Kernel_OS_Init(void)
     TCCR3B = 0;
     TCNT3 = 0;             // Set timer to 0
     TCCR3B |= (1<<WGM32);  // Set to CTC (mode 4)
-    TCCR3B |= (1<<CS31);   // Set to 64 prescaler
-    OCR3A = 250;           // Setting timer target
+    TCCR3B |= (1<<CS31);   // Set to 8 prescaler
+    OCR3A = 2000;          // Setting timer target
     TIMSK3 |= (1<<OCIE3A); // Enable interrupt A for timer 3.
 
     // Initialize priority task scheduler ISR for 100Hz.
