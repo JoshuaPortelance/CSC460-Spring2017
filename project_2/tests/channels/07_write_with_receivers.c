@@ -12,7 +12,7 @@
 
 void test_results() {
 	char * trace = get_trace();
-	char * correct_trace = "(1,(2,2),1),";
+	char * correct_trace = "(1,(2,(3,3),2),1),";
 	if (strcmp(correct_trace, trace) == 0) {
 		OS_Abort(TEST_PASS);
 		} else {
