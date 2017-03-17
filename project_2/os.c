@@ -1194,7 +1194,7 @@ int main(void)
 
     // Call user space main so all user tasks can be created.
     //Kernel_Task_Create_System(main_a, 0);
-	main_a();
+    main_a();
 
     // Start the OS. This should never return.
     Kernel_OS_Start();
