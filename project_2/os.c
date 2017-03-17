@@ -6,28 +6,30 @@
  */
 
 #define F_CPU 16000000L    // Specify oscillator frequency
+
 #include <util/delay.h>
 #include <avr/io.h>
 #include <string.h>
 #include <avr/interrupt.h>
+
 #include "os.h"
 #include "kernel.h"
 #include "error_codes.h"
 #include "user_space.h"
 
-BOOL debug = FALSE;		// If DEBUG is true, then PORTB will be used to display timings.
-/*
-	DDRC   = 0b1111111
-	PORTC
-	Pin 37 - Bit 0 - Kernel_Idle_Task
-	Pin 36 - Bit 1 - 1kHz ISR
-	Pin 35 - Bit 2 - 100Hz ISR
-	Pin 34 - Bit 3 - Kernel_Request_Handler
-	Pin 33 - Bit 4 - Kernel_Dispatch
-	Pin 32 - Bit 5 - 
-	Pin 31 - Bit 6 - 
-	Pin 30 - Bit 7 - 
+/*  Debugging pins
+    DDRC   = 0b1111111
+    PORTC
+    Pin 37 - Bit 0 - Kernel_Idle_Task
+    Pin 36 - Bit 1 - 1kHz ISR
+    Pin 35 - Bit 2 - 100Hz ISR
+    Pin 34 - Bit 3 - Kernel_Request_Handler
+    Pin 33 - Bit 4 - Kernel_Dispatch
+    Pin 32 - Bit 5 - 
+    Pin 31 - Bit 6 - 
+    Pin 30 - Bit 7 - 
 */
+BOOL debug = FALSE;		// If DEBUG is true, then PORTB will be used to display timings as per the above comment.
 
 /*
  * Globals.
@@ -566,16 +568,18 @@ void Kernel_OS_Abort(unsigned int error)
 {
     // Initializing the on-board LED.
     DDRB    = 0b11111111;
-    PORTB    = 0b00000000;
+    PORTB   = 0b00000000;
     unsigned int i;
     for(;;)
     {
         PORTB    &= 0b01111111;        // Turn LED off.
         _delay_ms(5000);
-        for(i=0; i <= error; i++)
+        for(i=0; i < error; i++)
         {
-            PORTB    ^= 0b10000000;    // Toggle LED.
+            PORTB    |= 0b10000000;    // Turn LED On.
             _delay_ms(250);
+			PORTB    &= 0b01111111;    // Turn LED Off.
+			_delay_ms(250);
         }
     }
 }
@@ -673,16 +677,20 @@ void Kernel_Request_Handler(void)
                 break;
             case CHANINIT:
                 Kernel_Chan_Init();
+                break;
             case SEND:
                 Kernel_Send(Cp->channel, Cp->message);
+                break;
             case RECV:
                 Kernel_Recv(Cp->channel);
+                break;
             case WRITE:
                 Kernel_Write(Cp->channel, Cp->message);
+                break;
             default:
                 // Houston! we have a problem here!
                 Kernel_OS_Abort(DEFUALT_REQUEST);
-            break;
+                break;
         }
     }
 }
@@ -929,11 +937,14 @@ void Kernel_Chan_Init()
     {
         Cp->return_value = 0;    // No more uninitialized channels.
     }
-    channel_descriptors[Channels].sender = NULL;
-    channel_descriptors[Channels].num_receivers = 0;
-    Channels++;
-    channel_descriptors[Channels].number = Channels;
-    Cp->return_value = Channels;
+	else
+	{
+		channel_descriptors[Channels].sender = NULL;
+		channel_descriptors[Channels].num_receivers = 0;
+		Channels++;
+		channel_descriptors[Channels].number = Channels;
+		Cp->return_value = Channels;
+	}
 }
 
 
@@ -975,26 +986,24 @@ void Kernel_Send(CHAN ch, int v)
         Cp->state = BLOCKED;
         Kernel_Dispatch();
     }
-    else
+
+    int i;
+    for(i = channel_descriptors[ch].num_receivers - 1; i >= 0; i--)
     {
-        int i;
-        for(i = channel_descriptors[ch].num_receivers - 1; i >= 0; i--)
+        channel_descriptors[ch].receivers[i]->state = READY;
+        channel_descriptors[ch].num_receivers--;
+        channel_descriptors[ch].receivers[i]->message = v;
+        switch(channel_descriptors[ch].receivers[i]->priority)
         {
-            channel_descriptors[ch].receivers[i]->state = READY;
-            channel_descriptors[ch].num_receivers--;
-            channel_descriptors[ch].receivers[i]->message = v;
-            switch(channel_descriptors[ch].receivers[i]->priority)
-            {
-                case SYSTEM:
-                    enqueue_system(channel_descriptors[ch].receivers[i]);
-                    break;
-                case ROUNDROBIN:
-                    enqueue_rr(channel_descriptors[ch].receivers[i]);
-                    break;
-                default:
-                    Kernel_OS_Abort(DEFUALT_PRIORITY);
-                    break;
-            }
+            case SYSTEM:
+                enqueue_system(channel_descriptors[ch].receivers[i]);
+                break;
+            case ROUNDROBIN:
+                enqueue_rr(channel_descriptors[ch].receivers[i]);
+                break;
+            default:
+                Kernel_OS_Abort(DEFUALT_PRIORITY);
+                break;
         }
     }
     channel_descriptors[ch].num_receivers = 0;
@@ -1184,6 +1193,7 @@ int main(void)
     Kernel_Task_Create_Round_Robin(Kernel_Idle_Task, 0);
 
     // Call user space main so all user tasks can be created.
+    //Kernel_Task_Create_System(main_a, 0);
     main_a();
 
     // Start the OS. This should never return.

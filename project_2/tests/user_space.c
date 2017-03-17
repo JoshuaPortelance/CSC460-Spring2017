@@ -68,7 +68,7 @@ void ToggleLED()
 	}
 }
 
-unsigned int main_a(void)
+void main_a(void)
 {
 	// Create all tasks.
 
@@ -84,5 +84,4 @@ unsigned int main_a(void)
 
 	// This is working!!!!
 	Task_Create_Period(ToggleLED, 1, 2, 1, 20);
-	return 0;
 }
