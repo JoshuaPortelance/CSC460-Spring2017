@@ -13,7 +13,7 @@ int count = 0;
 
 void test_results() {
 	char * trace = get_trace();
-	char * correct_trace = "(1,1),(2,2),(3,3),(4,4),(5,5),(6,6),(7,7),";
+	char * correct_trace = "(1,1),(2,2),(3,3),(4,4),(5,5),(6,";
 	if (strcmp(correct_trace, trace) == 0) {
 		OS_Abort(TEST_PASS);
 	} else {
@@ -28,16 +28,18 @@ void task(void) {
 	for (;;) {
 		add_to_trace(arg, ENTER);
 
-		if (arg == 7) {
+		if (arg == 6) {
 			Disable_Interrupt();
 			test_results();
 		}
+
 		add_to_trace(arg, EXIT);
+
 		Task_Next();
 	}
 }
 
-void main_t() {
+void main_a() {
 	Task_Create_Period(task, 1, 8, 1, 1);
 	Task_Create_Period(task, 2, 8, 1, 2);
 	Task_Create_Period(task, 3, 8, 1, 3);

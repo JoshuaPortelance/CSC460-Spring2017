@@ -17,8 +17,6 @@
 #include "error_codes.h"
 #include "user_space.h"
 
-//#include "02_order_of_rr.h" //Include a test file here. It will be called in main instead of the user space.
-
 /*  Debugging pins
     DDRC   = 0b1111111
     PORTC
@@ -679,16 +677,20 @@ void Kernel_Request_Handler(void)
                 break;
             case CHANINIT:
                 Kernel_Chan_Init();
+                break;
             case SEND:
                 Kernel_Send(Cp->channel, Cp->message);
+                break;
             case RECV:
                 Kernel_Recv(Cp->channel);
+                break;
             case WRITE:
                 Kernel_Write(Cp->channel, Cp->message);
+                break;
             default:
                 // Houston! we have a problem here!
                 Kernel_OS_Abort(DEFUALT_REQUEST);
-            break;
+                break;
         }
     }
 }
@@ -935,11 +937,14 @@ void Kernel_Chan_Init()
     {
         Cp->return_value = 0;    // No more uninitialized channels.
     }
-    channel_descriptors[Channels].sender = NULL;
-    channel_descriptors[Channels].num_receivers = 0;
-    Channels++;
-    channel_descriptors[Channels].number = Channels;
-    Cp->return_value = Channels;
+	else
+	{
+		channel_descriptors[Channels].sender = NULL;
+		channel_descriptors[Channels].num_receivers = 0;
+		Channels++;
+		channel_descriptors[Channels].number = Channels;
+		Cp->return_value = Channels;
+	}
 }
 
 
@@ -981,26 +986,24 @@ void Kernel_Send(CHAN ch, int v)
         Cp->state = BLOCKED;
         Kernel_Dispatch();
     }
-    else
+
+    int i;
+    for(i = channel_descriptors[ch].num_receivers - 1; i >= 0; i--)
     {
-        int i;
-        for(i = channel_descriptors[ch].num_receivers - 1; i >= 0; i--)
+        channel_descriptors[ch].receivers[i]->state = READY;
+        channel_descriptors[ch].num_receivers--;
+        channel_descriptors[ch].receivers[i]->message = v;
+        switch(channel_descriptors[ch].receivers[i]->priority)
         {
-            channel_descriptors[ch].receivers[i]->state = READY;
-            channel_descriptors[ch].num_receivers--;
-            channel_descriptors[ch].receivers[i]->message = v;
-            switch(channel_descriptors[ch].receivers[i]->priority)
-            {
-                case SYSTEM:
-                    enqueue_system(channel_descriptors[ch].receivers[i]);
-                    break;
-                case ROUNDROBIN:
-                    enqueue_rr(channel_descriptors[ch].receivers[i]);
-                    break;
-                default:
-                    Kernel_OS_Abort(DEFUALT_PRIORITY);
-                    break;
-            }
+            case SYSTEM:
+                enqueue_system(channel_descriptors[ch].receivers[i]);
+                break;
+            case ROUNDROBIN:
+                enqueue_rr(channel_descriptors[ch].receivers[i]);
+                break;
+            default:
+                Kernel_OS_Abort(DEFUALT_PRIORITY);
+                break;
         }
     }
     channel_descriptors[ch].num_receivers = 0;
@@ -1190,9 +1193,8 @@ int main(void)
     Kernel_Task_Create_Round_Robin(Kernel_Idle_Task, 0);
 
     // Call user space main so all user tasks can be created.
-    main_a();
-
-	//main_t(); This is to run the main of whichever test you included at the top of this file.
+    //Kernel_Task_Create_System(main_a, 0);
+	main_a();
 
     // Start the OS. This should never return.
     Kernel_OS_Start();

@@ -26,12 +26,11 @@ void task(void) {
 	OS_Abort(TEST_FAIL);
 }
 
-void main_t() {
+void main_a() {
 	//This will initialize channel 1.
 	if(Chan_Init() == 0) {
 		OS_Abort(10); //Channel failed to initialize for some reason.
 	}
 	Task_Create_System(task, 1);
 	Task_Create_System(task, 2);
-	
 }

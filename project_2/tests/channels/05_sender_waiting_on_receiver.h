@@ -9,6 +9,6 @@
 #ifndef __TEST_05__
 #define __TEST_05__
 
-void main_t(void);
+void main_a(void);
 
 #endif

@@ -8,6 +8,6 @@
 #ifndef __TEST_02__
 #define __TEST_02__
 
-void main_t(void);
+void main_a(void);
 
 #endif

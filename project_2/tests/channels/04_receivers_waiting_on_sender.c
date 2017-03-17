@@ -2,12 +2,12 @@
  * Test 04
  * Tests that the receivers wait until a sender is on the channel.
  * Once the sender comes and sends then the receivers start again,
- * in the order that they were blocked in.
+ * in the order that they were blocked in. FIFO.
  */
 
 #include "trace.h"
 #include "kernel.h"
-#include "04_no_sender_on_channel.h"
+#include "04_receivers_waiting_on_sender.h"
 
 #include <string.h>
 
@@ -34,7 +34,7 @@ void receiver_task(void) {
 	add_to_trace(arg, EXIT);
 
 	//Task 2 should be the last RR to run after being unblocked.
-	if (arg == 2) {
+	if (arg == 1) {
 		Disable_Interrupt();
 		test_results();
 	}
@@ -53,11 +53,12 @@ void sender_task(void) {
 	//This will exit and die.
 }
 
-void main_t() {
+void main_a() {
 	//This will initialize channel 1.
 	if(Chan_Init() == 0) {
 		OS_Abort(10); //Channel failed to initialize for some reason.
 	}
+
 	Task_Create_System(receiver_task, 1);
 	Task_Create_System(receiver_task, 2);
 	Task_Create_System(sender_task, 3);

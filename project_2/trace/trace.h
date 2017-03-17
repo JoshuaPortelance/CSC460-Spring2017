@@ -11,7 +11,7 @@
 #ifndef __TRACE_H__
 #define __TRACE_H__
 
-#define MAX_TRACE_LENGTH 64
+#define MAX_TRACE_LENGTH 256
 
 #define TEST_PASS 0   //Number of blinks that will be sent to OS_Abort.
 #define TEST_FAIL 11  //Number of blinks that will be sent to OS_Abort.
