@@ -1,12 +1,12 @@
 /*
- * Test 05
- * Tests that the sender will become blocked if no receivers are on
- * the channel.
+ * Test 07
+ * Tests that write transmits data and unblocks receivers already
+ * on the channel.
  */
 
 #include "trace.h"
 #include "kernel.h"
-#include "05_sender_waiting_on_receiver.h"
+#include "07_write_with_receivers.h"
 
 #include <string.h>
 
@@ -15,7 +15,7 @@ void test_results() {
 	char * correct_trace = "(1,(2,2),1),";
 	if (strcmp(correct_trace, trace) == 0) {
 		OS_Abort(TEST_PASS);
-	} else {
+		} else {
 		OS_Abort(TEST_FAIL);
 	}
 }
@@ -31,13 +31,13 @@ void receiver_task(void) {
 	add_to_trace(arg, EXIT);
 }
 
-void sender_task(void) {
+void writer_task(void) {
 	int arg = 0;
 	arg = Task_GetArg();
 
 	add_to_trace(arg, ENTER);
 
-	Send(1, 1);
+	Write(1, 1);
 
 	add_to_trace(arg, EXIT);
 
@@ -50,6 +50,7 @@ void main_a() {
 	if(Chan_Init() == 0) {
 		OS_Abort(10); //Channel failed to initialize for some reason.
 	}
-	Task_Create_System(sender_task, 1);
+	Task_Create_System(receiver_task, 1);
 	Task_Create_System(receiver_task, 2);
+	Task_Create_System(writer_task, 3);
 }
