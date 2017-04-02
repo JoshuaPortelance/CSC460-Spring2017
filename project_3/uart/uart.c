@@ -6,7 +6,6 @@
  */ 
 
 #define F_CPU 16000000UL
-#define _BV(bit) \ (1 << (bit))
 #define BAUD 9600	// This needs to be defined, but is never used directly.
 #include "uart.h"
 #include <avr/io.h>
@@ -24,8 +23,10 @@ void init_uart_usb() {
 
 unsigned char serial_read_usb()
 {
-	while ((UCSR0A & _BV(RXC0)) == 0)		// While data is NOT available to read
-	{;;}
+	if((UCSR0A & _BV(RXC0)) == 0)		// If data if not available, return null char.
+	{
+		return '\0';
+	}
 	return UDR0;
 }
 
@@ -49,16 +50,18 @@ void init_uart_bt() {
 
 unsigned char serial_read_bt()
 {
-	while ((UCSR1A & _BV(RXC1)) == 0)		// While data is NOT available to read
-	{;;}
-	return UDR0;
+	if((UCSR1A & _BV(RXC1)) == 0)		// If data if not available, return null char.
+	{
+		return '\0';
+	}
+	return UDR1;
 }
 
 void serial_write_bt(unsigned char DataOut)
 {
 	while ((UCSR1A & _BV(UDRE1)) == 0)		// while NOT ready to transmit
 	{;;}
-	UDR0 = DataOut;
+	UDR1 = DataOut;
 }
 
 
@@ -74,14 +77,16 @@ void init_uart_roomba() {
 
 unsigned char serial_read_roomba()
 {
-	while ((UCSR2A & _BV(RXC2)) == 0)		// While data is NOT available to read
-	{;;}
-	return UDR0;
+	if((UCSR2A & _BV(RXC2)) == 0)		// If data if not available, return null char.
+	{
+		return '\0';
+	}
+	return UDR2;
 }
 
 void serial_write_roomba(unsigned char DataOut)
 {
 	while ((UCSR2A & _BV(UDRE2)) == 0)		// while NOT ready to transmit
 	{;;}
-	UDR0 = DataOut;
+	UDR2 = DataOut;
 }

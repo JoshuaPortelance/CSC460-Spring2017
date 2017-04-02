@@ -5,6 +5,8 @@
  *  Author: Josh
  */
 
+#define _BV(bit) \ (1 << (bit))
+
 void init_uart_usb(void);
 unsigned char serial_read_usb(void);
 void serial_write_usb(unsigned char DataOut);
