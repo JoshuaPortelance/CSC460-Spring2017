@@ -36,13 +36,14 @@ void init() {
   //Task_Create_Period(Transmit, 0, 10, 1, 1);
   
 }
-
+*/
 /*============================================================================*/
+/*
 void init_LED(void){
 	DDRB	= 0b11111111;	//configure pin 7 of PORTB as output (digital pin 13 on the Arduino Mega2560)
 	PORTB	= 0b10000000;	//Set port to low
 }
-
+*/
 /*============================================================================*/
 // INITIALIZES Joystick Centers
 // void getJoyCenter() {

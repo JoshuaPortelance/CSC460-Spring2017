@@ -1,3 +1,6 @@
+#ifndef _BASE_H
+#define _BASE_H
+
 int DEBUG = 0;
 int i; //looper
 int MAXINPUT = 50;
@@ -181,3 +184,5 @@ int analogRead(uint8_t pin)
 }
 
 */
+
+#endif /* _BASE_H */

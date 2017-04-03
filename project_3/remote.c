@@ -9,7 +9,7 @@
 #include "os.h"
 #include "uart.h"
 #include "remote.h"
-//#include "Roomba_Driver.h"
+#include "roomba.h"
 #include <avr/io.h>
 #include <stdlib.h>
 
@@ -67,7 +67,8 @@ void WriteUSB()
 }
 */
 
-void setup(){
+void setup()
+{
 	/*
 	// PIN INIT//////////////////////
 	pinMode(idle_debug_pin, OUTPUT);
@@ -101,9 +102,12 @@ void setup(){
 	init_uart_usb();
 	init_uart_bt();
 	
+	// Roomba INTI
+	init_roomba();
+	
 	// Laser INIT
-	DDRA = 0b00000001;
-	PORTA = 0b00000000;
+	DDRA |= 0b00000001;		// Enable pin 22 as output
+	PORTA &= 0b11111110;	// Turn pin 22 to low
 	
 	// Servo INIT
 	
@@ -176,11 +180,11 @@ void receive_transmission()
 					}
 					
 					// PROCESS INPUT VALUES.
-					panSpeed          = atoi(panSpeed_val);
-					tiltSpeed         = atoi(tiltSpeed_val);
-					laserTargetState  = atoi(laser_val);
-					roombaSpeed       = atoi(roombaSpeed_val);
-					roombaRadius      = atoi(roombaRadius_val);
+					pan_speed			 = atoi(panSpeed_val);
+					tilt_speed			 = atoi(tiltSpeed_val);
+					laser_target_state	 = atoi(laser_val);
+					roomba_target_speed  = atoi(roombaSpeed_val);
+					roomba_target_radius = atoi(roombaRadius_val);
 					
 					// Reset values.
 					input_pos = 0;
@@ -251,17 +255,67 @@ void receive_transmission()
 /*============================================================================*/
 // Update the state of the laser.
 // ~ 0.05ms average runtime
-void updateLaser(){
-	if (laserState != laserTargetState)
+void update_laser()
+{
+	for(;;)
 	{
-		laserState = laserTargetState;
-		if (laserTargetState == 0)
-			PORTA &= 0b11111110;    // Turn laser off.
-		if (laserTargetState == 1)
-			PORTA |= 0b00000001;    // Turn laser on.
+		if (laser_state != laser_target_state)
+		{
+			laser_state = laser_target_state;
+			if (laser_target_state == 0)
+			{
+				PORTA &= 0b11111110;    // Turn laser off.
+			}
+			else if (laser_target_state == 1)
+			{
+				PORTA |= 0b00000001;    // Turn laser on.
+			}
+		}
+		Task_Next();
 	}
 }
 
+/*============================================================================*/
+// Update the Roomba.
+/* Go straight  - 32768 for radius
+ * Stop         - 0 speed, 0 radius
+ * Radius should be between -5 to 5
+ * Speed should be between -500 to 500
+ */
+void update_roomba()
+{
+	for(;;)
+	{
+		if (roomba_current_speed == roomba_target_speed && roomba_current_radius == roomba_target_radius)
+		{
+			if (roomba_target_speed > MAXSPEED)
+			{
+				roomba_target_speed = MAXSPEED;
+			}
+			else if (roomba_target_speed < MINSPEED)
+			{
+				roomba_target_speed = MINSPEED;
+			}
+			
+			if (roomba_target_radius > MAXRADIUS)
+			{
+				roomba_target_radius = MAXRADIUS;
+			}
+			else if (roomba_target_radius < MINRADIUS)
+			{
+				roomba_target_radius = MINRADIUS;
+			}
+			
+			roomba_current_speed = roomba_target_speed;
+			roomba_current_radius = roomba_target_radius;
+			
+			roomba_drive(roomba_target_speed, roomba_target_radius);
+		}
+		Task_Next();	
+	}
+}
+
+/*
 void b()
 {
 	for(;;)
@@ -274,6 +328,7 @@ void b()
 			Task_Next();
 		}
 }
+*/
 
 /*============================================================================*/
 void a_main()
@@ -287,7 +342,7 @@ void a_main()
 	
 	// Creating Tasks
 	//Task_Create_Period(receive_transmission, 0, 3, 2, 1);
-	Task_Create_Period(b, 0, 3, 2, 1);
+	//Task_Create_Period(b, 0, 3, 2, 1);
 	//Task_Create_Period(update_servos, 0, 2, 1, 2);
 	//Task_Create_Period(update_roomba, 0, 10, 1, 3);
 	//Task_Create_Period(update_laser, 0, 10, 1, 4);
@@ -310,60 +365,5 @@ void updateServos(){
   panServo.writeMicroseconds(panPos);
   tiltServo.writeMicroseconds(tiltPos);
   digitalWrite(update_servo_debug_pin, LOW);
-}
-*/
-
-/*============================================================================*/
-// Update the Roomba.
-/* Go straight  - 32768 for radious
- * Stop         - 0 speed, 0 radius
- * Radius should be between -5 to 5
- * Speed should be between -500 to 500
- */
-/*
-void updateRoomba(){
-  digitalWrite(update_roomba_debug_pin, HIGH);
-  if(roombaSpeed>MAXSPEED)roombaSpeed = MAXSPEED;
-  if(roombaSpeed<MINSPEED)roombaSpeed = MINSPEED;
-    
-  if(roombaRadius>MAXRADIUS)roombaRadius = MAXRADIUS;
-  if(roombaRadius<MINRADIUS)roombaRadius = MINRADIUS;
-    
-  r.drive(roombaSpeed, roombaRadius);
-  digitalWrite(update_roomba_debug_pin, LOW);
-}
-*/
-
-/*============================================================================*/
-/*
-// Setup
-void init(){
-  // PIN INIT//////////////////////
-  pinMode(idle_debug_pin, OUTPUT);
-  pinMode(laser_debug_pin, OUTPUT);
-  pinMode(update_servo_debug_pin, OUTPUT);
-  pinMode(update_roomba_debug_pin, OUTPUT);
-  pinMode(transmit_debug_pin, OUTPUT);
-  pinMode(receive_debug_pin, OUTPUT);
-  pinMode(check_light_debug_pin, OUTPUT);
-  
-  pinMode(laserTogglePin, OUTPUT);
-  
-  // Serial INIT///////////////////
-  Serial1.begin(9600);
-  Serial.begin(9600);
-
-  // Roomba INIT///////////////////
-  r.init();
-  
-  panServo.attach(panServoPin);
-  tiltServo.attach(tiltServoPin);
- 
-  // Start task arguments are:
-  // Scheduler_StartTask(start offset in ms, period in ms, function);
-  Scheduler_StartTask(0, 30, receiveTransmission);
-  Scheduler_StartTask(3, 20, updateServos);
-  Scheduler_StartTask(6, 100, updateRoomba);
-  Scheduler_StartTask(9, 100, updateLaser);
 }
 */

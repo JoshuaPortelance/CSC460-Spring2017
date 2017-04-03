@@ -30,11 +30,11 @@ unsigned char serial_read_usb()
 	return UDR0;
 }
 
-void serial_write_usb(unsigned char DataOut)
+void serial_write_usb(unsigned char data_out)
 {
 	while ((UCSR0A & _BV(UDRE0)) == 0)		// while NOT ready to transmit
 	{;;}
-	UDR0 = DataOut;
+	UDR0 = data_out;
 }
 
 
@@ -57,11 +57,11 @@ unsigned char serial_read_bt()
 	return UDR1;
 }
 
-void serial_write_bt(unsigned char DataOut)
+void serial_write_bt(unsigned char data_out)
 {
 	while ((UCSR1A & _BV(UDRE1)) == 0)		// while NOT ready to transmit
 	{;;}
-	UDR1 = DataOut;
+	UDR1 = data_out;
 }
 
 
@@ -84,9 +84,9 @@ unsigned char serial_read_roomba()
 	return UDR2;
 }
 
-void serial_write_roomba(unsigned char DataOut)
+void serial_write_roomba(unsigned char data_out)
 {
 	while ((UCSR2A & _BV(UDRE2)) == 0)		// while NOT ready to transmit
 	{;;}
-	UDR2 = DataOut;
+	UDR2 = data_out;
 }
