@@ -5,7 +5,24 @@ int DEBUG = 0;
 int i; //looper
 int MAXINPUT = 50;
 
-/*
+//PRESETS
+uint16_t joyMax = 1023;
+uint16_t joyMin = 0;
+
+//Pins
+uint8_t rightJoyYPin    = 88; // 88 A9
+uint8_t rightJoyXPin    = 87; // 87 A10
+uint8_t leftJoyYPin     = 86; // 86 A11
+uint8_t leftJoyXPin     = 85; // 85 A12
+// int rightJoySWPin    = 53; // pin 22
+// int leftJoySWPin  = 23;
+
+//Initialization
+uint32_t rightXAxisCenter = 0;
+uint32_t rightYAxisCenter = 0;
+uint32_t leftXAxisCenter  = 0;
+uint32_t leftYAxisCenter  = 0;
+
 //Roomba movement INIT
 int radiusRoomba = 0;
 int speedRoomba  = 0;
@@ -17,29 +34,27 @@ int tiltSpeed = 0;
 //Laser INIT
 int laserState      = 0;   //0 is off, 1 is on.
 
-//Joystick MIN/MAX Variables
-int joyMax = 1024;
-int joyMin = 0;
-
-// Right Joystick INIT
-int rightJoyXPin     = A10;
-int rightJoyYPin     = A9;
-int rightJoySWPin    = 22;
-int rightXAxis       = 0;
-int rightYAxis       = 0;
-int rightXAxisCenter = 0;
-int rightYAxisCenter = 0;
-
-// Left  Joystick INIT
-int leftJoyXPin     = A12;
-int leftJoyYPin     = A11;
-// int leftJoySWPin  = 23;
+// Joystick Axis
+int rightXAxis      = 0;
+int rightYAxis      = 0;
 int leftXAxis       = 0;
 int leftYAxis       = 0;
-int leftXAxisCenter = 0;
-int leftYAxisCenter = 0;
-*/
+
+//Prototypes
+void bt_sendData();
+void getSpeeds();
+void rightJoySwitch();
+void checkJoysticks();
+void getJoyCenter();
+void init_LED();
+void initADC();
+void initLaserSwitch();
+uint16_t readADC(uint8_t pin);
+void Blink();
+void a_main();
+
 ////////////////////////////////////////////////////////////////////////////////
+//Reference Material
 
 // 1 output, 0 input
 
