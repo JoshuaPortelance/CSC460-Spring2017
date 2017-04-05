@@ -35,7 +35,7 @@ void receive_transmission()
 		// Cycle through char array.
 		unsigned int input_pos = 0;
 		
-		while(rx_data_in_buffer == 1)
+		while(rx_data_in_blue_tooth_buffer == 1)
 		{
 			unsigned char inByte = serial_read_bt();
 
@@ -258,7 +258,7 @@ void setup()
 	init_uart_bt();
 	
 	// Roomba INTI
-	//init_roomba();
+	init_roomba();			// This takes around 5 seconds to complete, so offset other tasks accordingly.
 	
 	// Laser INIT
 	DDRA |= 0b00000001;		// Enable pin 22 as output
@@ -267,9 +267,6 @@ void setup()
 	// Servo INIT
 	init_servos();
 }
-
-
-
 
 /*
 void b()
@@ -284,7 +281,9 @@ void b()
 			Task_Next();
 		}
 }
+*/
 
+/*
 void servo_testing()
 {
 	for(;;)
@@ -293,13 +292,17 @@ void servo_testing()
 		Task_Next();
 	}
 }
+*/
 
+/*
 void init_LED(void)
 {
 	DDRB	= 0b11111111;	//configure pin 7 of PORTB as output (digital pin 13 on the Arduino Mega2560)
 	PORTB	= 0b10000000;	//Set port to low
 }
+*/
 
+/*
 void Blink()
 {
 	//init_LED();
@@ -309,6 +312,7 @@ void Blink()
 		Task_Next();
 	}
 }
+*/
 
 void Transmit()
 {
@@ -320,6 +324,7 @@ void Transmit()
 	}
 }
 
+/*
 volatile unsigned char x = 'H';
 void ReadUSB()
 {
@@ -341,7 +346,9 @@ void WriteUSB()
 		Task_Next();
 	}
 }
+*/
 
+/*
 void serial_buffer_test()
 {
 	for(;;)
@@ -512,7 +519,7 @@ void a_main()
 
 	//Task_Create_Period(Blink, 0, 10, 1, 1);
 	//Task_Create_Period(Blink, 0, 10, 1, 1);
-	//Task_Create_Period(Transmit, 0, 10, 1, 1);
+	Task_Create_Period(Transmit, 2, 10, 1, 500);
 	//Task_Create_RR(ReadUSB, 0);
 	//Task_Create_RR(WriteUSB, 0);
 	//Task_Create_Period(ReadUSB, 0, 6, 1, 1);
@@ -520,7 +527,7 @@ void a_main()
 	
 	// Creating Tasks
 	Task_Create_System(setup, 0);
-	Task_Create_Period(receive_transmission, 1, 3, 1, 1);
+	Task_Create_Period(receive_transmission, 2, 5, 1, 502);
 	//Task_Create_Period(b, 0, 3, 2, 1);
 	//Task_Create_Period(update_servos, 0, 2, 1, 2);
 	//Task_Create_Period(update_roomba, 0, 10, 1, 3);

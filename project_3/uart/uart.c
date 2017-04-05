@@ -17,13 +17,10 @@ static volatile circular_buffer blue_tooth_rx_buff;
 static volatile circular_buffer blue_tooth_tx_buff;
 volatile unsigned int blue_tooth_uart_status = 0;
 
-static volatile circular_buffer roomba_rx_buff;
-static volatile circular_buffer roomba_tx_buff;
-volatile unsigned int roomba_uart_status = 0;
-
 /*============================================================================*/
 /*============================================================================*/
-void init_uart_usb() {
+void init_uart_usb()
+{
 	UBRR0H = 0b0000;		// This is for 9600 Baud.
 	UBRR0L = 0b01100111;	// This is for 9600 Baud.
 
@@ -33,6 +30,7 @@ void init_uart_usb() {
 	UCSR0B = _BV(RXEN0) | _BV(TXEN0);   // Enable RX and TX
 }
 
+/*============================================================================*/
 unsigned char serial_read_usb()
 {
 	if((UCSR0A & _BV(RXC0)) == 0)		// If data if not available, return null char.
@@ -42,6 +40,7 @@ unsigned char serial_read_usb()
 	return UDR0;
 }
 
+/*============================================================================*/
 void serial_write_usb(unsigned char data_out)
 {
 	while ((UCSR0A & _BV(UDRE0)) == 0)		// while NOT ready to transmit
@@ -51,7 +50,8 @@ void serial_write_usb(unsigned char data_out)
 
 /*============================================================================*/
 /*============================================================================*/
-void init_uart_bt() {
+void init_uart_bt()
+{
 	UBRR1H = 0b0000;		// This is for 9600 Baud.
 	UBRR1L = 0b01100111;	// This is for 9600 Baud.
 
@@ -59,13 +59,13 @@ void init_uart_bt() {
 	UCSR1A = (1 << TXC1) | (0 << U2X1);
 	
 	// Enable receiver, transmitter, rx complete interrupt and tx complete interrupt.
-	UCSR1B = (1<<RXEN1)|(1<<TXEN1)|(1<<RXCIE1)|(1<<TXCIE1);
+	UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (1 << RXCIE1) | (1 << TXCIE1);
 
 	// 8-bit data
-	UCSR1C = ((1<<UCSZ11)|(1<<UCSZ10));
+	UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
 
 	// Disable 2x speed
-	UCSR1A &= ~(1<<U2X1);
+	UCSR1A &= ~(1 << U2X1);
 	
 	Cir_Buf_Init(&blue_tooth_rx_buff);
 	Cir_Buf_Init(&blue_tooth_tx_buff);
@@ -105,24 +105,30 @@ void serial_write_bt(unsigned char data_out)
 
 /*============================================================================*/
 // Interrupt function called for transmit complete.
-ISR(USART1_TX_vect){
-	if(blue_tooth_tx_buff.size > 0){
+ISR(USART1_TX_vect)
+{
+	if(blue_tooth_tx_buff.size > 0)
+	{
 		UDR1 = Cir_Buf_Read(&blue_tooth_tx_buff);
-		} else {
+	}
+	else
+	{
 		blue_tooth_uart_status &= ~(UART_STATUS_TRANSMITTING);
 	}
 }
 
 /*============================================================================*/
 // Interrupt function for data received.
-ISR(USART1_RX_vect){
+ISR(USART1_RX_vect)
+{
 	Cir_Buf_Add(&blue_tooth_rx_buff, UDR1);
 	rx_data_in_blue_tooth_buffer = 1;
 }
 
 /*============================================================================*/
 /*============================================================================*/
-void init_uart_roomba() {
+void init_uart_roomba()
+{
 	UBRR2H = 0b0000;		// This is for 19200 Baud.
 	UBRR2L = 0b00110011;	// This is for 19200 Baud.
 
@@ -132,6 +138,7 @@ void init_uart_roomba() {
 	UCSR2B = _BV(RXEN2) | _BV(TXEN2);   /* Enable RX and TX */
 }
 
+/*============================================================================*/
 unsigned char serial_read_roomba()
 {
 	if((UCSR2A & _BV(RXC2)) == 0)		// If data if not available, return null char.
@@ -141,6 +148,7 @@ unsigned char serial_read_roomba()
 	return UDR2;
 }
 
+/*============================================================================*/
 void serial_write_roomba(unsigned char data_out)
 {
 	while ((UCSR2A & _BV(UDRE2)) == 0)		// while NOT ready to transmit

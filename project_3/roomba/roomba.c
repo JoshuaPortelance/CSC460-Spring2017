@@ -12,10 +12,11 @@
 #include "roomba.h"
 #include "uart.h"
 
+/*============================================================================*/
 void init_roomba()
 {	
-	DDRA |= 0b00000010;		// Enable pin 23 as output
-	PORTA |= 0b00000010;	// Turn pin 23 to high
+	DDRA  |= 0b00000010;	// Enable pin 23 as output.
+	PORTA |= 0b00000010;	// Turn pin 23 to high.
 	
 	init_uart_roomba();		// Initialize serial 2 to 19200 baud.
 	
@@ -44,6 +45,7 @@ void init_roomba()
 	serial_write_roomba(SAFE);
 }
 
+/*============================================================================*/
 void roomba_drive(int velocity, int radius)
 {
 	serial_write_roomba(DRIVE);
@@ -53,10 +55,12 @@ void roomba_drive(int velocity, int radius)
 	serial_write_roomba(LOW_BYTE(radius));
 }
 
+/*============================================================================*/
 void roomba_dock() {
 	serial_write_roomba(DOCK);
 }
 
+/*============================================================================*/
 void roomba_power_off() {
 	serial_write_roomba(STOP);
 }

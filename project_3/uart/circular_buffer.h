@@ -13,12 +13,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct circular_buffer{
+typedef struct circular_buffer {
 	unsigned char buffer[CIR_BUF_SIZE];
 	unsigned int size;
 	unsigned int next_postion;
 	unsigned int start_position;
-}circular_buffer;
+} circular_buffer;
 
 
 void Cir_Buf_Add(volatile circular_buffer*, unsigned char byte);
