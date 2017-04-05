@@ -12,10 +12,10 @@ uint16_t joyMax = 1023;
 uint16_t joyMin = 0;
 
 //Pins
-uint8_t rightJoyYPin    = 88; // 88 A9
-uint8_t rightJoyXPin    = 87; // 87 A10
-uint8_t leftJoyYPin     = 86; // 86 A11
-uint8_t leftJoyXPin     = 85; // 85 A12
+uint8_t rightJoyYPin    = 9;  // 88 A9
+uint8_t rightJoyXPin    = 10; // 87 A10
+uint8_t leftJoyYPin     = 11; // 86 A11
+uint8_t leftJoyXPin     = 12; // 85 A12
 // int rightJoySWPin    = 53; // pin 22
 // int leftJoySWPin  = 23;
 
@@ -51,8 +51,10 @@ void getJoyCenter();
 void init_LED();
 void initADC();
 void initLaserSwitch();
-uint16_t readADC(uint8_t pin);
+void initialize();
+uint16_t readADC(uint8_t channel);
 void Blink();
+void a();
 void a_main();
 
 ////////////////////////////////////////////////////////////////////////////////

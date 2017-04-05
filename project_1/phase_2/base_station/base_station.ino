@@ -253,7 +253,7 @@ void bt_sendData(){
   digitalWrite(31, HIGH);
   //write to Serial1
   Serial1.print("#"+String(panSpeed)+"|"+String(tiltSpeed)+"|"+String(laserState)+"|"+String(speedRoomba)+"|"+String(-radiusRoomba)+"%\n");
-//  Serial.print("#"+String(panSpeed)+"|"+String(tiltSpeed)+"|"+String(laserState)+"|"+String(speedRoomba)+"|"+String(-radiusRoomba)+"%\n");
+  Serial.print("#"+String(panSpeed)+"|"+String(tiltSpeed)+"|"+String(laserState)+"|"+String(speedRoomba)+"|"+String(-radiusRoomba)+"%\n");
   digitalWrite(31, LOW);
 }
 
