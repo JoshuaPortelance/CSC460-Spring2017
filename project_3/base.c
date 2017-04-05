@@ -132,6 +132,8 @@ void getSpeeds() {
     tiltSpeed = -(rightYAxis - rightYAxisCenter);
     tiltSpeed = tiltSpeed/23;
 
+
+
     //Roomba Radius
     int radiusOffset = 40;
     //0 is straight
@@ -148,6 +150,8 @@ void getSpeeds() {
       if(radiusRoomba <  2000 && radiusRoomba >=  radiusOffset)radiusRoomba = 2000-radiusRoomba;
       if(radiusRoomba > -2000 && radiusRoomba <= -radiusOffset)radiusRoomba = -2000-radiusRoomba;
     }
+
+
 
     //Roomba Speed
     //(+/-)500

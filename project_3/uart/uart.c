@@ -3,12 +3,12 @@
  *
  * Created: 4/1/2017 2:39:58 PM
  *  Author: Josh
- */ 
+ */
 
 #define F_CPU 16000000UL
 #define BAUD 9600	// This needs to be defined, but is never used directly.
 #include "uart.h"
-#include "circular_buffer.h"
+#include "circular_buffer.c"
 #include <avr/io.h>
 #include <util/setbaud.h>
 #include <avr/interrupt.h>
@@ -57,7 +57,7 @@ void init_uart_bt()
 
 	// Clear USART Transmit complete flag, normal USART transmission speed
 	UCSR1A = (1 << TXC1) | (0 << U2X1);
-	
+
 	// Enable receiver, transmitter, rx complete interrupt and tx complete interrupt.
 	UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (1 << RXCIE1) | (1 << TXCIE1);
 
@@ -66,10 +66,10 @@ void init_uart_bt()
 
 	// Disable 2x speed
 	UCSR1A &= ~(1 << U2X1);
-	
+
 	Cir_Buf_Init(&blue_tooth_rx_buff);
 	Cir_Buf_Init(&blue_tooth_tx_buff);
-	
+
 	rx_data_in_blue_tooth_buffer = 0;
 }
 
@@ -92,13 +92,13 @@ void serial_write_bt(unsigned char data_out)
 {
 	// Add byte to buffer.
 	Cir_Buf_Add(&blue_tooth_tx_buff, data_out);
-	
+
 	// If we are not already transmitting the buffer begin.
 	if(!(UART_STATUS_TRANSMITTING & blue_tooth_uart_status))
 	{
 		// Set status to transmitting.
 		blue_tooth_uart_status |= UART_STATUS_TRANSMITTING;
-		
+
 		UDR1 = Cir_Buf_Read(&blue_tooth_tx_buff);
 	}
 }
