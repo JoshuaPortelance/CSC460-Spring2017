@@ -11,12 +11,10 @@ static float MINRADIUS  = -2000;  //minimum Roomba turn radius
 static int   MAXINPUT   = 50;     //max receiving buffer size
 
 // PAN/TILT Servo Variables.
-//Servo panServo;
-//Servo tiltServo;
-int pan_position     = 1500;
-int pan_speed		 = 0;
-int tilt_position    = 1500;
-int tilt_speed		 = 0;
+int pan_current_speed  = 0;
+int pan_target_speed   = 0;
+int tilt_current_speed = 0;
+int tilt_target_speed  = 0;
 //int pan_servo_pin  = 2; This is just here for a reminder.
 //int tilt_servo_pin = 3; This is just here for a reminder.
 

@@ -929,7 +929,7 @@ void Write( CHAN ch, int v )
   */
 unsigned int Now()
 {
-	unsigned int temp_time = TCNT3;
+	unsigned int temp_time = TCNT1;
 	unsigned int time = (10 * current_tick) + (temp_time / 2000);
 	return time;
 }
@@ -943,22 +943,22 @@ void Timer_Init()
 {
   Disable_Interrupt();
   //Clear timer config.
-  TCCR3A = 0;
-  TCCR3B = 0;
+  TCCR1A = 0;
+  TCCR1B = 0;
   //Set to CTC (mode 4)
-  TCCR3B |= (1<<WGM32);
+  TCCR1B |= (1<<WGM12);
 
   //Set prescaller to 1/8
-  TCCR3B |= (1<<CS31);
+  TCCR1B |= (1<<CS11);
 
   //Set TOP value 0.0001s*MSECPERTICK
-  OCR3A = 2000*MSECPERTICK;
+  OCR1A = 2000*MSECPERTICK;
 
   //Enable interrupt A for timer 3.
-  TIMSK3 |= (1<<OCIE3A);
+  TIMSK1 |= (1<<OCIE1A);
 
   //Set timer to 0 (optional here).
-  TCNT3 = 0;
+  TCNT1 = 0;
 
   // enable interrupt
   Enable_Interrupt();
@@ -1000,7 +1000,7 @@ void Kernel_Tick()
 }
 
 // This ISR fires every MSECPERTICKms and represents our RTOS tick
-ISR(TIMER3_COMPA_vect)
+ISR(TIMER1_COMPA_vect)
 {
   Kernel_Tick();
   if (Cp->py >= RR)
