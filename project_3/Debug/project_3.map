@@ -294,7 +294,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000     0x18f8
+.text           0x00000000     0x18f4
  *(.vectors)
  .vectors       0x00000000       0xe4 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega2560/avr6/crtatmega2560.o
                 0x00000000                __vector_default
@@ -490,91 +490,89 @@ END GROUP
  .text.update_servos
                 0x0000126c       0x16 remote.o
                 0x0000126c                update_servos
- .text.update   0x00001282       0x18 remote.o
-                0x00001282                update
- .text.remote   0x0000129a        0x8 remote.o
-                0x0000129a                remote
- .text.a_main   0x000012a2       0x16 remote.o
-                0x000012a2                a_main
+ .text.remote   0x00001282       0x1c remote.o
+                0x00001282                remote
+ .text.a_main   0x0000129e       0x16 remote.o
+                0x0000129e                a_main
  .text.init_roomba
-                0x000012b8       0x9c roomba/roomba.o
-                0x000012b8                init_roomba
+                0x000012b4       0x9c roomba/roomba.o
+                0x000012b4                init_roomba
  .text.roomba_drive
-                0x00001354       0x2e roomba/roomba.o
-                0x00001354                roomba_drive
+                0x00001350       0x2e roomba/roomba.o
+                0x00001350                roomba_drive
  .text.init_servos
-                0x00001382       0x64 servo/servo.o
-                0x00001382                init_servos
+                0x0000137e       0x64 servo/servo.o
+                0x0000137e                init_servos
  .text.adjust_pan_angle
-                0x000013e6       0xc4 servo/servo.o
-                0x000013e6                adjust_pan_angle
+                0x000013e2       0xc4 servo/servo.o
+                0x000013e2                adjust_pan_angle
  .text.adjust_tilt_angle
-                0x000014aa       0xc4 servo/servo.o
-                0x000014aa                adjust_tilt_angle
+                0x000014a6       0xc4 servo/servo.o
+                0x000014a6                adjust_tilt_angle
  .text.Cir_Buf_Init
-                0x0000156e       0x18 uart/circular_buffer.o
-                0x0000156e                Cir_Buf_Init
+                0x0000156a       0x18 uart/circular_buffer.o
+                0x0000156a                Cir_Buf_Init
  .text.Cir_Buf_Add
-                0x00001586       0x54 uart/circular_buffer.o
-                0x00001586                Cir_Buf_Add
+                0x00001582       0x54 uart/circular_buffer.o
+                0x00001582                Cir_Buf_Add
  .text.Cir_Buf_Read
-                0x000015da       0x4c uart/circular_buffer.o
-                0x000015da                Cir_Buf_Read
+                0x000015d6       0x4c uart/circular_buffer.o
+                0x000015d6                Cir_Buf_Read
  .text.init_uart_usb
-                0x00001626       0x22 uart/uart.o
-                0x00001626                init_uart_usb
+                0x00001622       0x22 uart/uart.o
+                0x00001622                init_uart_usb
  .text.serial_write_usb
-                0x00001648       0x10 uart/uart.o
-                0x00001648                serial_write_usb
+                0x00001644       0x10 uart/uart.o
+                0x00001644                serial_write_usb
  .text.init_uart_bt
-                0x00001658       0x3a uart/uart.o
-                0x00001658                init_uart_bt
+                0x00001654       0x3a uart/uart.o
+                0x00001654                init_uart_bt
  .text.serial_read_bt
-                0x00001692       0x2c uart/uart.o
-                0x00001692                serial_read_bt
+                0x0000168e       0x2c uart/uart.o
+                0x0000168e                serial_read_bt
  .text.__vector_38
-                0x000016be       0x76 uart/uart.o
-                0x000016be                __vector_38
+                0x000016ba       0x76 uart/uart.o
+                0x000016ba                __vector_38
  .text.__vector_36
-                0x00001734       0x62 uart/uart.o
-                0x00001734                __vector_36
+                0x00001730       0x62 uart/uart.o
+                0x00001730                __vector_36
  .text.init_uart_roomba
-                0x00001796       0x22 uart/uart.o
-                0x00001796                init_uart_roomba
+                0x00001792       0x22 uart/uart.o
+                0x00001792                init_uart_roomba
  .text.serial_write_roomba
-                0x000017b8       0x10 uart/uart.o
-                0x000017b8                serial_write_roomba
+                0x000017b4       0x10 uart/uart.o
+                0x000017b4                serial_write_roomba
  .text.avr-libc.fplib
-                0x000017c8        0x8 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(cmpsf2.o)
-                0x000017c8                __nesf2
-                0x000017c8                __eqsf2
-                0x000017c8                __cmpsf2
-                0x000017c8                __ltsf2
-                0x000017c8                __lesf2
+                0x000017c4        0x8 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(cmpsf2.o)
+                0x000017c4                __nesf2
+                0x000017c4                __eqsf2
+                0x000017c4                __cmpsf2
+                0x000017c4                __ltsf2
+                0x000017c4                __lesf2
  .text.avr-libc.fplib
-                0x000017d0       0x7a c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(floatsisf.o)
-                0x000017d0                __floatunsisf
-                0x000017d4                __floatsisf
+                0x000017cc       0x7a c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(floatsisf.o)
+                0x000017cc                __floatunsisf
+                0x000017d0                __floatsisf
  .text.avr-libc.fplib
-                0x0000184a       0x48 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(fp_cmp.o)
-                0x0000184a                __fp_cmp
+                0x00001846       0x48 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(fp_cmp.o)
+                0x00001846                __fp_cmp
  .text.avr-libc.fplib
-                0x00001892        0x8 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(gesf2.o)
-                0x00001892                __gesf2
-                0x00001892                __gtsf2
- .text.libgcc   0x0000189a       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_tablejump2.o)
-                0x0000189a                __tablejump2__
+                0x0000188e        0x8 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libm.a(gesf2.o)
+                0x0000188e                __gesf2
+                0x0000188e                __gtsf2
+ .text.libgcc   0x00001896       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_tablejump2.o)
+                0x00001896                __tablejump2__
  .text.avr-libc
-                0x000018aa       0x3a c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libc.a(atoi.o)
-                0x000018aa                atoi
+                0x000018a6       0x3a c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libc.a(atoi.o)
+                0x000018a6                atoi
  .text.avr-libc
-                0x000018e4       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libc.a(mul10.o)
-                0x000018e4                __mulhi_const_10
-                0x000018f4                . = ALIGN (0x2)
+                0x000018e0       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/../../../../avr/lib/avr6\libc.a(mul10.o)
+                0x000018e0                __mulhi_const_10
+                0x000018f0                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x000018f4        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
-                0x000018f4                _exit
-                0x000018f4                exit
+ .fini9         0x000018f0        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
+                0x000018f0                _exit
+                0x000018f0                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -593,11 +591,11 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x000018f4        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
+ .fini0         0x000018f0        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.9.2/avr6\libgcc.a(_exit.o)
  *(.fini0)
-                0x000018f8                _etext = .
+                0x000018f4                _etext = .
 
-.data           0x00800200        0x0 load address 0x000018f8
+.data           0x00800200        0x0 load address 0x000018f4
                 [!provide]                PROVIDE (__data_start, .)
  *(.data)
  *(.data*)
@@ -677,8 +675,8 @@ END GROUP
                 0x00801862                current_tilt_angle
                 0x00801864                current_pan_angle
                 0x00801866                PROVIDE (__bss_end, .)
-                0x000018f8                __data_load_start = LOADADDR (.data)
-                0x000018f8                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x000018f4                __data_load_start = LOADADDR (.data)
+                0x000018f4                __data_load_end = (__data_load_start + SIZEOF (.data))
 
 .noinit         0x00801866        0x0
                 [!provide]                PROVIDE (__noinit_start, .)
@@ -754,36 +752,36 @@ END GROUP
 .debug_sfnames
  *(.debug_sfnames)
 
-.debug_aranges  0x00000000      0x2a0
+.debug_aranges  0x00000000      0x298
  *(.debug_aranges)
  .debug_aranges
                 0x00000000       0x20 cswitch.o
  .debug_aranges
                 0x00000020      0x120 os.o
  .debug_aranges
-                0x00000140       0x58 remote.o
+                0x00000140       0x50 remote.o
  .debug_aranges
-                0x00000198       0x38 roomba/roomba.o
+                0x00000190       0x38 roomba/roomba.o
  .debug_aranges
-                0x000001d0       0x30 servo/servo.o
+                0x000001c8       0x30 servo/servo.o
  .debug_aranges
-                0x00000200       0x30 uart/circular_buffer.o
+                0x000001f8       0x30 uart/circular_buffer.o
  .debug_aranges
-                0x00000230       0x70 uart/uart.o
+                0x00000228       0x70 uart/uart.o
 
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0x2fcf
+.debug_info     0x00000000     0x2fac
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0xbbc C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega2560/avr6/crtatmega2560.o
  .debug_info    0x00000bbc       0x76 cswitch.o
  .debug_info    0x00000c32     0x1342 os.o
- .debug_info    0x00001f74      0x5e0 remote.o
- .debug_info    0x00002554      0x3d5 roomba/roomba.o
- .debug_info    0x00002929      0x1a6 servo/servo.o
- .debug_info    0x00002acf      0x17d uart/circular_buffer.o
- .debug_info    0x00002c4c      0x383 uart/uart.o
+ .debug_info    0x00001f74      0x5bd remote.o
+ .debug_info    0x00002531      0x3d5 roomba/roomba.o
+ .debug_info    0x00002906      0x1a6 servo/servo.o
+ .debug_info    0x00002aac      0x17d uart/circular_buffer.o
+ .debug_info    0x00002c29      0x383 uart/uart.o
 
 .debug_abbrev   0x00000000     0x157d
  *(.debug_abbrev)
@@ -796,40 +794,40 @@ END GROUP
  .debug_abbrev  0x000012f5       0xeb uart/circular_buffer.o
  .debug_abbrev  0x000013e0      0x19d uart/uart.o
 
-.debug_line     0x00000000     0x1a31
+.debug_line     0x00000000     0x1a2a
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x1f9 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega2560/avr6/crtatmega2560.o
  .debug_line    0x000001f9       0xbb cswitch.o
  .debug_line    0x000002b4      0xb8e os.o
- .debug_line    0x00000e42      0x44c remote.o
- .debug_line    0x0000128e      0x24e roomba/roomba.o
- .debug_line    0x000014dc      0x1e3 servo/servo.o
- .debug_line    0x000016bf       0xd6 uart/circular_buffer.o
- .debug_line    0x00001795      0x29c uart/uart.o
+ .debug_line    0x00000e42      0x445 remote.o
+ .debug_line    0x00001287      0x24e roomba/roomba.o
+ .debug_line    0x000014d5      0x1e3 servo/servo.o
+ .debug_line    0x000016b8       0xd6 uart/circular_buffer.o
+ .debug_line    0x0000178e      0x29c uart/uart.o
 
-.debug_frame    0x00000000      0x778
+.debug_frame    0x00000000      0x768
  *(.debug_frame)
  .debug_frame   0x00000000      0x42c os.o
- .debug_frame   0x0000042c       0xc8 remote.o
- .debug_frame   0x000004f4       0x68 roomba/roomba.o
- .debug_frame   0x0000055c       0x84 servo/servo.o
- .debug_frame   0x000005e0       0x44 uart/circular_buffer.o
- .debug_frame   0x00000624      0x154 uart/uart.o
+ .debug_frame   0x0000042c       0xb8 remote.o
+ .debug_frame   0x000004e4       0x68 roomba/roomba.o
+ .debug_frame   0x0000054c       0x84 servo/servo.o
+ .debug_frame   0x000005d0       0x44 uart/circular_buffer.o
+ .debug_frame   0x00000614      0x154 uart/uart.o
 
-.debug_str      0x00000000      0xebf
+.debug_str      0x00000000      0xeb8
  *(.debug_str)
  .debug_str     0x00000000      0x3e6 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.1.130/gcc/dev/atmega2560/avr6/crtatmega2560.o
  .debug_str     0x000003e6      0x647 os.o
                                 0x6b5 (size before relaxing)
- .debug_str     0x00000a2d      0x254 remote.o
-                                0x3e7 (size before relaxing)
- .debug_str     0x00000c81       0x98 roomba/roomba.o
+ .debug_str     0x00000a2d      0x24d remote.o
+                                0x3e0 (size before relaxing)
+ .debug_str     0x00000c7a       0x98 roomba/roomba.o
                                 0x260 (size before relaxing)
- .debug_str     0x00000d19       0x90 servo/servo.o
+ .debug_str     0x00000d12       0x90 servo/servo.o
                                 0x26a (size before relaxing)
- .debug_str     0x00000da9       0x76 uart/circular_buffer.o
+ .debug_str     0x00000da2       0x76 uart/circular_buffer.o
                                 0x1df (size before relaxing)
- .debug_str     0x00000e1f       0xa0 uart/uart.o
+ .debug_str     0x00000e18       0xa0 uart/uart.o
                                 0x2fe (size before relaxing)
 
 .debug_loc      0x00000000     0x17f5
@@ -859,14 +857,14 @@ END GROUP
 .debug_pubtypes
  *(.debug_pubtypes)
 
-.debug_ranges   0x00000000      0x280
+.debug_ranges   0x00000000      0x278
  *(.debug_ranges)
  .debug_ranges  0x00000000      0x170 os.o
- .debug_ranges  0x00000170       0x48 remote.o
- .debug_ranges  0x000001b8       0x28 roomba/roomba.o
- .debug_ranges  0x000001e0       0x20 servo/servo.o
- .debug_ranges  0x00000200       0x20 uart/circular_buffer.o
- .debug_ranges  0x00000220       0x60 uart/uart.o
+ .debug_ranges  0x00000170       0x40 remote.o
+ .debug_ranges  0x000001b0       0x28 roomba/roomba.o
+ .debug_ranges  0x000001d8       0x20 servo/servo.o
+ .debug_ranges  0x000001f8       0x20 uart/circular_buffer.o
+ .debug_ranges  0x00000218       0x60 uart/uart.o
 
 .debug_macro
  *(.debug_macro)
