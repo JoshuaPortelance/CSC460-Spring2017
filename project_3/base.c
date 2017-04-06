@@ -22,7 +22,7 @@ void bt_sendData(){
 		int c = 0;
 		char buffer[2];
 
-		//TODO FOR NEGATIVES
+		// to do FOR NEGATIVES
 		// int panSpeed     = 3;
 		// int tiltSpeed    = 0;
 		// int laserState   = 0;
@@ -31,7 +31,7 @@ void bt_sendData(){
 
 
 		// #-5|-5|1|-500|-2000%
-		char data[20];
+		char data[30];
 		data[c++] = '#';
 		if(panSpeed < 0){
 			data[c++] = '-';
@@ -58,41 +58,38 @@ void bt_sendData(){
 		if(speedRoomba < 0){
 			data[c++] = '-';
 		}
-		char SR[4];
-		int value1 = abs(speedRoomba);
-		snprintf(SR, 4, "%d", value1);
+		char SR[10];
+		int ABSspeedRoomba = abs(speedRoomba);
+		sprintf(SR, "%d", ABSspeedRoomba);
 
-		if(abs(speedRoomba) < 100){
-			if(abs(speedRoomba) < 10){
-				if(abs(speedRoomba) < 1){
-					data[c++] = SR[0];
-				}
+		if(ABSspeedRoomba < 100){
+			if(ABSspeedRoomba < 10){
+				data[c++] = SR[0];
 			}else{
-				data[c++]  = SR[0];
+				data[c++] = SR[0];
 				data[c++] = SR[1];
 			}
 		}else{
-			data[c++]  = SR[0];
-			data[c++]  = SR[1];
+			data[c++] = SR[0];
+			data[c++] = SR[1];
 			data[c++] = SR[2];
 		}
 		data[c++]='|';
+
 
 		//radiusroomba 5 chars
 		if(radiusRoomba < 0){
 			data[c++] = '-';
 		}
 
-		char RR[5];
-		int value2 = abs(radiusRoomba);
-		snprintf(RR, 5, "%d", value2);
+		char RR[10];
+		int ABSradiusRoomba = abs(radiusRoomba);
+		sprintf(RR, "%d", ABSradiusRoomba);
 
-		if(abs(radiusRoomba) < 1000){
-			if(abs(radiusRoomba) < 100){
-				if(abs(radiusRoomba) < 10){
-					if(abs(radiusRoomba) < 1){
-						data[c++] = RR[0];
-					}
+		if(ABSradiusRoomba < 1000){
+			if(ABSradiusRoomba < 100){
+				if(ABSradiusRoomba < 10){
+					data[c++] = RR[0];
 				}else{
 					data[c++] = RR[0];
 					data[c++] = RR[1];
@@ -115,8 +112,9 @@ void bt_sendData(){
 		{
 			serial_write_bt(data[i]);
 			serial_write_usb(data[i]);
-		}
 
+		}
+		serial_write_usb('\n');
 		Task_Next();
 	}
 }
@@ -126,44 +124,49 @@ void bt_sendData(){
 // SCHEDULED
 void getSpeeds() {
   for(;;){
+		int MAXSPEED = 2;
     //Servo speeds
-    panSpeed = -(rightXAxis - rightXAxisCenter);
+    panSpeed = -(abs(rightYAxis) - rightYAxisCenter);
     panSpeed = panSpeed/23;
-    tiltSpeed = -(rightYAxis - rightYAxisCenter);
+    tiltSpeed = (abs(rightXAxis) - rightXAxisCenter);
     tiltSpeed = tiltSpeed/23;
+		if(panSpeed>MAXSPEED)panSpeed=MAXSPEED;
+		if(panSpeed<-MAXSPEED)panSpeed=-MAXSPEED;
+		if(tiltSpeed>MAXSPEED)tiltSpeed=MAXSPEED;
+		if(tiltSpeed<-MAXSPEED)tiltSpeed=-MAXSPEED;
 
 
 
     //Roomba Radius
-    int radiusOffset = 40;
+    int radiusOffset = 20;
     //0 is straight
     //2000 (+and-) are next increment, (+/-)1 is fastest spin
-    radiusRoomba = -(leftXAxis - leftXAxisCenter);
+
+    radiusRoomba = (leftXAxis - leftXAxisCenter);
     if(radiusRoomba < radiusOffset && radiusRoomba > -radiusOffset){
       radiusRoomba = 0;
     }else{
-      radiusRoomba = radiusRoomba*4;
+      radiusRoomba = radiusRoomba*15.87;
 
       if(radiusRoomba >  2000)radiusRoomba =  1999;
       if(radiusRoomba < -2000)radiusRoomba = -1999;
 
-      if(radiusRoomba <  2000 && radiusRoomba >=  radiusOffset)radiusRoomba = 2000-radiusRoomba;
-      if(radiusRoomba > -2000 && radiusRoomba <= -radiusOffset)radiusRoomba = -2000-radiusRoomba;
+      if(radiusRoomba <  2000 && radiusRoomba >=  radiusOffset)radiusRoomba = 2000-radiusRoomba+120;
+      if(radiusRoomba > -2000 && radiusRoomba <= -radiusOffset)radiusRoomba = -2000-radiusRoomba-120;
     }
 
 
 
     //Roomba Speed
     //(+/-)500
-    int MAXSPEED = 3; //* 100 !!!
-    int speedOffset = 30;
+
+    int speedOffset = 20;
     float tempspeed=0.000;
     speedRoomba = -(leftYAxis - leftYAxisCenter);
     if(speedRoomba < speedOffset && speedRoomba > -speedOffset){
       speedRoomba = 0;
     }else{
-      tempspeed = speedRoomba / 5; //(normal max is 500)
-      speedRoomba = tempspeed * MAXSPEED;
+      speedRoomba = speedRoomba / .25; //(normal max is 500)
       if(speedRoomba >  500)speedRoomba =  500;
       if(speedRoomba < -500)speedRoomba = -500;
     }
@@ -300,8 +303,8 @@ void a_main(){
 	//PID Task_Create_Period(voidfuncptr f, int arg, TICK period, TICK wcet, TICK offset)
 	// Task_Create_Period(a    , 0, 0.1,  2, 1); //testing only
 	//FIX TIX TO MS
-	Task_Create_Period(bt_sendData    , 0, 14,  2, 200);
-	Task_Create_Period(checkJoysticks , 0, 14,  2, 202);
-	Task_Create_Period(getSpeeds      , 0, 14,  2, 204);
+	Task_Create_Period(bt_sendData    , 0, 7,  2, 200);
+	Task_Create_Period(checkJoysticks , 0, 7,  2, 202);
+	Task_Create_Period(getSpeeds      , 0, 7,  2, 204);
 	Task_Create_Period(rightJoySwitch , 0, 14, 1, 206);
 }
