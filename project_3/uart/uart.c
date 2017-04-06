@@ -8,7 +8,8 @@
 #define F_CPU 16000000UL
 #define BAUD 9600	// This needs to be defined, but is never used directly.
 #include "uart.h"
-#include "circular_buffer.c"
+#include "circular_buffer.h"
+//#include "circular_buffer.c"
 #include <avr/io.h>
 #include <util/setbaud.h>
 #include <avr/interrupt.h>
