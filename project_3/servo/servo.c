@@ -7,13 +7,17 @@
  */
 
 #include "servo.h"
+#include "uart.h"
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static float MAX_ANGLE_DELTA = 5;		// Max amount that the servo angle can change by.
 static float MIN_ANGLE_DELTA = -5;		// Min amount that the servo angle can change by.
 static float MAX_ANGLE_VAL = 300;		// Max value which corresponds to 180 degrees on the servo.
 static float MIN_ANGLE_VAL = 69;		// Min value which corresponds to 0 degrees on the servo.
-static float DEFUALT_ANGLE_VAL = 125;	// Value which corresponds to 90 degrees which is the default value.
+static float DEFUALT_ANGLE_VAL = 188;	// Value which corresponds to 90 degrees which is the default value.
 
 int current_pan_angle;
 int current_tilt_angle;
@@ -56,22 +60,17 @@ void adjust_pan_angle(int angle_delta)
 		angle_delta = MIN_ANGLE_DELTA;
 	}
 
-	//Verifying angle.
-	if ((current_pan_angle + angle_delta) > MAX_ANGLE_VAL)			// Max angle.
+	//Verifying angle.	
+	current_pan_angle += angle_delta;
+	if (current_pan_angle > MAX_ANGLE_VAL)			// Max angle.
 	{
 		current_pan_angle = MAX_ANGLE_VAL;
-		OCR3C = current_pan_angle;
 	}
-	else if ((current_pan_angle + angle_delta) < MIN_ANGLE_VAL)		// Min angle.
+	else if (current_pan_angle < MIN_ANGLE_VAL)		// Min angle.
 	{
 		current_pan_angle = MIN_ANGLE_VAL;
-		OCR3C = current_pan_angle;
 	}
-	else
-	{
-		current_pan_angle += angle_delta;
-		OCR3C = current_pan_angle;
-	}
+	OCR3C = current_pan_angle;
 }
 
 /*============================================================================*/
@@ -88,20 +87,15 @@ void adjust_tilt_angle(int angle_delta)
 		angle_delta = MIN_ANGLE_DELTA;
 	}
 
-	//Verifying angle.
-	if ((current_tilt_angle + angle_delta) > MAX_ANGLE_VAL)			// Max angle.
+	//Verifying angle.	
+	current_tilt_angle += angle_delta;
+	if (current_tilt_angle > MAX_ANGLE_VAL)			// Max angle.
 	{
 		current_tilt_angle = MAX_ANGLE_VAL;
-		OCR3C = current_tilt_angle;
 	}
-	else if ((current_tilt_angle + angle_delta) < MIN_ANGLE_VAL)	// Min angle.
+	else if (current_tilt_angle < MIN_ANGLE_VAL)	// Min angle.
 	{
 		current_tilt_angle = MIN_ANGLE_VAL;
-		OCR3C = current_tilt_angle;
 	}
-	else
-	{
-		current_tilt_angle += angle_delta;
-		OCR3C = current_tilt_angle;
-	}
+	OCR3B = current_tilt_angle;
 }
