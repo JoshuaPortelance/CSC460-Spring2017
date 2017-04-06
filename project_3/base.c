@@ -19,70 +19,68 @@
 void bt_sendData(){
 	for(;;){
 		int i = 0;
+		int c = 0;
+		char buffer[2];
 
 		//TODO FOR NEGATIVES
-		int panSpeed     = -5;
-		int tiltSpeed    = -5;
-		int laserState   = 1;
-		int speedRoomba  = -249;
-		int radiusRoomba = -1234;
+		// int panSpeed     = 3;
+		// int tiltSpeed    = 0;
+		// int laserState   = 0;
+		// int speedRoomba  = -24;
+		// int radiusRoomba = -124;
 
 
 		// #-5|-5|1|-500|-2000%
 		char data[20];
-		data[0] = '#';
+		data[c++] = '#';
 		if(panSpeed < 0){
-			data[1] = '-';
-		}else{
-			data[1] = ' ';
+			data[c++] = '-';
 		}
-		data[2] = (char) panSpeed;
-		data[3] = '|';
+		sprintf(buffer,"%d",abs(panSpeed));
+		data[c++] = buffer[0];
+
+		data[c++] = '|';
+
 		if(tiltSpeed < 0){
-			data[4] = '-';
-		}else{
-			data[4] = ' ';
+			data[c++] = '-';
 		}
-		data[5] = (char) tiltSpeed;
-		data[6] = '|';
-		data[7] = (char) laserState;
-		data[8] = '|';
+		sprintf(buffer,"%d",abs(tiltSpeed));
+		data[c++] = buffer[0];
+
+		data[c++] = '|';
+
+		sprintf(buffer,"%d",abs(laserState));
+		data[c++] = buffer[0];
+
+		data[c++] = '|';
 
 		// speedroomba 4 chars
 		if(speedRoomba < 0){
-			data[9] = '-';
-		}else{
-			data[9] = ' ';
+			data[c++] = '-';
 		}
 		char SR[4];
 		int value1 = abs(speedRoomba);
 		snprintf(SR, 4, "%d", value1);
 
 		if(abs(speedRoomba) < 100){
-			data[10] = '0';
 			if(abs(speedRoomba) < 10){
-				data[11] = '0';
 				if(abs(speedRoomba) < 1){
-					data[12] = '0';
-				}else{
-					data[12] = SR[0];
+					data[c++] = SR[0];
 				}
 			}else{
-				data[11]  = SR[0];
-				data[12] = SR[1];
+				data[c++]  = SR[0];
+				data[c++] = SR[1];
 			}
 		}else{
-			data[10]  = SR[0];
-			data[11]  = SR[1];
-			data[12] = SR[2];
+			data[c++]  = SR[0];
+			data[c++]  = SR[1];
+			data[c++] = SR[2];
 		}
-		data[13]='|';
+		data[c++]='|';
 
 		//radiusroomba 5 chars
 		if(radiusRoomba < 0){
-			data[14] = '-';
-		}else{
-			data[14] = ' ';
+			data[c++] = '-';
 		}
 
 		char RR[5];
@@ -90,37 +88,33 @@ void bt_sendData(){
 		snprintf(RR, 5, "%d", value2);
 
 		if(abs(radiusRoomba) < 1000){
-			data[15] = '0';
 			if(abs(radiusRoomba) < 100){
-				data[16] = '0';
 				if(abs(radiusRoomba) < 10){
-					data[17] = '0';
 					if(abs(radiusRoomba) < 1){
-						data[18] = '0';
-					}else{
-						data[18] = RR[0];
+						data[c++] = RR[0];
 					}
 				}else{
-					data[17] = RR[0];
-					data[18] = RR[1];
+					data[c++] = RR[0];
+					data[c++] = RR[1];
 				}
 			}else{
-				data[16] = RR[0];
-				data[17] = RR[1];
-				data[18] = RR[2];
+				data[c++] = RR[0];
+				data[c++] = RR[1];
+				data[c++] = RR[2];
 			}
 		}else{
-			data[15] = RR[0];
-			data[16] = RR[1];
-			data[17] = RR[2];
-			data[18] = RR[3];
+			data[c++] = RR[0];
+			data[c++] = RR[1];
+			data[c++] = RR[2];
+			data[c++] = RR[3];
 		}
 
-		data[19] = '%';
+		data[c++] = '%';
 
-		for(i = 0; i < 18; i++)
+		for(i = 0; i < c; i++)
 		{
 			serial_write_bt(data[i]);
+			serial_write_usb(data[i]);
 		}
 
 		Task_Next();
@@ -134,9 +128,11 @@ void getSpeeds() {
   for(;;){
     //Servo speeds
     panSpeed = -(rightXAxis - rightXAxisCenter);
-    panSpeed = panSpeed/90;
+    panSpeed = panSpeed/23;
     tiltSpeed = -(rightYAxis - rightYAxisCenter);
-    tiltSpeed = tiltSpeed/90;
+    tiltSpeed = tiltSpeed/23;
+
+
 
     //Roomba Radius
     int radiusOffset = 40;
@@ -154,6 +150,8 @@ void getSpeeds() {
       if(radiusRoomba <  2000 && radiusRoomba >=  radiusOffset)radiusRoomba = 2000-radiusRoomba;
       if(radiusRoomba > -2000 && radiusRoomba <= -radiusOffset)radiusRoomba = -2000-radiusRoomba;
     }
+
+
 
     //Roomba Speed
     //(+/-)500
@@ -176,7 +174,15 @@ void getSpeeds() {
 // SCHEDULED (periodic @ 135ms)
 void rightJoySwitch() {
   for(;;){
-    laserState = PINB & 1; // Dpin 53
+		int val = PINB & 1;
+		if (val == 0) {
+			if(laserState == 0){
+	      laserState = 1;
+	    }else{
+	      laserState = 0;
+	    }
+		}
+    // laserState = PINB & 1; // Dpin 53
     Task_Next();
 	}
 }
@@ -199,14 +205,14 @@ void checkJoysticks() {
 // INITIALIZERS
 void getJoyCenter() {
   int repeat = 30; //repeat number of times at initialization
+	serial_write_usb('S');
   for(i=0;i < repeat; i++){
-    //values 0-1023 each time
     leftXAxisCenter  += readADC(leftJoyXPin);
     leftYAxisCenter  += readADC(leftJoyYPin);
     rightXAxisCenter += readADC(rightJoyXPin);
     rightYAxisCenter += readADC(rightJoyYPin);
-    _delay_ms(10);
   }
+	serial_write_usb('F');
   leftXAxisCenter  /= repeat;
   leftYAxisCenter  /= repeat;
   rightXAxisCenter /= repeat;
@@ -217,43 +223,85 @@ void init_LED(void){
 	PORTB	= 0b10000000;	//Set port to low
 }
 void initADC() {
-  ADMUX  |= 1 << REFS0;
-  ADCSRA |= (1 << ADEN) | (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2); // prescaler 128
+	DDRC = (DDRC & 0xF0);
+	ADCSRA |= (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0); // Set ADC prescalar to 128 - 125KHz sample rate @ 16MHz
+	ADMUX |= (1 << REFS0); // Set ADC reference to AVCC
+	ADMUX |= (1 << ADLAR); // Left adjust ADC result to allow easy 8 bit reading
+	ADCSRA |= (1 << ADEN);  // Enable ADC
+	ADCSRA |= (1 << ADSC); //Start a conversion to warmup the ADC.
+
+
+  // ADMUX  |= 1 << REFS0;
+  // ADCSRA |= (1 << ADEN) | (1 << ADPS0) | (1 << ADPS1) | (1 << ADPS2); // prescaler 128
 }
 void initLaserSwitch(){
 	DDRB  |= 0b00000000;     // init Dpin 53 for rightJoySW
 	PORTB |= 0b00000001;     // set pullup for pin 53
 }
 /*============================================================================*/
+// inits
+void initialize(){
+	init_uart_bt(); // init connected BT
+	init_uart_usb();
+	init_LED();     // init onboard LED
+	initADC();
+	initLaserSwitch();
+	getJoyCenter(); // init Joystick Center values
+}
+/*============================================================================*/
 // ADC reader (analogRead)
-uint16_t readADC(uint8_t pin) {
-  ADMUX  &= 0xE0;
-  ADMUX  |= pin & 0x07;
-  ADCSRB  = pin & (1 << 3);
-  ADCSRA |= 1 << ADSC;
-  while(ADCSRA & (1 << ADSC));
-  return ADCW;
+uint16_t readADC(uint8_t channel) {
+	ADMUX = (ADMUX & 0xF0 ) | (0x07 & channel);
+	ADCSRB = (ADCSRB & 0xF7) | (channel & (1 << MUX5));
+	ADCSRA |= (1 << ADSC);
+	while ((ADCSRA & (1 << ADSC)));
+	return ADCH;
+  // ADMUX  &= 0xE0;
+  // ADMUX  |= pin & 0x07;
+  // ADCSRB  = pin & (1 << 3);
+  // ADCSRA |= 1 << ADSC;
+  // while(ADCSRA & (1 << ADSC));
+  // return ADCW;
 }
 /*============================================================================*/
 // Blink for Error State
 void Blink(){
 	for(;;){
 		PORTB ^= 0b10000000;
-		_delay_ms(500);
+		Task_Next();
 	}
 }
+
+void a(){
+	for(;;){
+		char c = 'a';
+		serial_write_bt(c);
+		serial_write_usb(c);
+		Task_Next();
+	}
+}
+
 /*============================================================================*/
 // Main control loop of the program.
-void a_main(){
-	init_uart_bt(); // init connected BT
-	init_LED();     // init onboard LED
-	initADC();
-	initLaserSwitch();
-	getJoyCenter(); // init Joystick Center values
 
+/*
+ADC
+ADLAR High means that 256 values
+ADC is split 2-8
+or them together to get it all (set adlar to 0)
+take the full ADCL (low) and or it with ADCH left shifted 8
+as soon as you read from ADCH it invalidates ADCH and ADCH so do ADCL first!, put them in variables and then or them together
+https://github.com/sdiemert/CSC460Project3/blob/master/basestation/joystick.c
+
+*/
+void a_main(){
+
+	Task_Create_System(initialize, 0);
 	//PID Task_Create_Period(voidfuncptr f, int arg, TICK period, TICK wcet, TICK offset)
-	Task_Create_Period(bt_sendData    , 0, 50,  5, 0);
-	Task_Create_Period(getSpeeds      , 0, 50,  5, 3);
-	Task_Create_Period(checkJoysticks , 0, 50,  5, 6);
-	Task_Create_Period(rightJoySwitch , 0, 135, 5, 9);
+	// Task_Create_Period(a    , 0, 0.1,  2, 1); //testing only
+	//FIX TIX TO MS
+	Task_Create_Period(bt_sendData    , 0, 14,  2, 200);
+	Task_Create_Period(checkJoysticks , 0, 14,  2, 202);
+	Task_Create_Period(getSpeeds      , 0, 14,  2, 204);
+	Task_Create_Period(rightJoySwitch , 0, 14, 1, 206);
 }
