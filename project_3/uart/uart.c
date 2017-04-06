@@ -14,6 +14,9 @@
 #include <util/setbaud.h>
 #include <avr/interrupt.h>
 
+#define Disable_Interrupt()		asm volatile ("cli"::)
+#define Enable_Interrupt()		asm volatile ("sei"::)
+
 static volatile circular_buffer blue_tooth_rx_buff;
 static volatile circular_buffer blue_tooth_tx_buff;
 volatile unsigned int blue_tooth_uart_status = 0;
@@ -135,13 +138,6 @@ void init_uart_roomba()
 {
 	UBRR2H = 0b0000;		// This is for 19200 Baud.
 	UBRR2L = 0b00110011;	// This is for 19200 Baud.
-
-	/*
-	UCSR2A &= ~(_BV(U2X2));
-
-	UCSR2C = _BV(UCSZ21) | _BV(UCSZ20); // 8-bit data
-	UCSR2B = _BV(RXEN2) | _BV(TXEN2);   // Enable RX and TX
-	*/
 	
 	// Clear USART Transmit complete flag, normal USART transmission speed
 	UCSR2A = (1 << TXC2) | (0 << U2X2);
@@ -162,15 +158,7 @@ void init_uart_roomba()
 
 /*============================================================================*/
 unsigned char serial_read_roomba()
-{
-	/*
-	if((UCSR2A & _BV(RXC2)) == 0)		// If data if not available, return null char.
-	{
-		return '\0';
-	}
-	return UDR2;
-	*/
-	
+{	
 	if (roomba_rx_buff.size == 0)
 	{
 		return 0;

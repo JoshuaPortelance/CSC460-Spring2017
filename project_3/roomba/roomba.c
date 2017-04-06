@@ -67,7 +67,7 @@ void roomba_power_off() {
 }
 
 /*============================================================================*/
-unsigned int roomba_detect_physical_wall(void)
+unsigned int roomba_detect_physical_wall()
 {
 	serial_write_roomba(SENSORS);
 	serial_write_roomba(7);
@@ -76,21 +76,24 @@ unsigned int roomba_detect_physical_wall(void)
 
 	if (collision != 0)
 	{
+		//serial_write_usb('H');
 		return 1;
 	}
 	return 0;
 }
 
 /*============================================================================*/
-unsigned int roomba_detect_virtual_wall(void)
+unsigned int roomba_detect_virtual_wall()
 {
 	serial_write_roomba(SENSORS);
 	serial_write_roomba(13);
 	while (rx_data_in_blue_tooth_buffer != 1);	// Wait for the Roomba to send us data.
 	unsigned int collision = serial_read_roomba();
-	if (collision != 1 || collision != 0)
+	if ((collision != 1) || (collision != 0))
 	{
 		return 0; // We got something we were not expecting so just return zero.
 	}
+	//if(collision == 1)
+		//serial_write_usb('G');
 	return collision;
 }

@@ -41,7 +41,6 @@ void Cir_Buf_Add(volatile circular_buffer *cb, unsigned char byte)
 	{
 		cb->start_position++;
 	}
-	
 }
 
 /*============================================================================*/
