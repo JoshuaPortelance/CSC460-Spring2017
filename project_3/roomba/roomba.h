@@ -52,5 +52,7 @@ void init_roomba();
 void roomba_drive(int velocity, int radius);
 void roomba_dock();
 void roomba_power_off();
+unsigned int roomba_detect_physical_wall(void);
+unsigned int roomba_detect_virtual_wall(void);
 
 #endif /* _ROOMBA_H */

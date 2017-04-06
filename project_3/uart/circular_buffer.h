@@ -8,7 +8,7 @@
 #ifndef CIRCULAR_BUFFER_H_
 #define CIRCULAR_BUFFER_H_
 
-#define CIR_BUF_SIZE 100
+#define CIR_BUF_SIZE 500
 
 #include <stdint.h>
 #include <stdlib.h>

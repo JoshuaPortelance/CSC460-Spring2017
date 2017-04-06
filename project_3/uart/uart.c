@@ -18,6 +18,9 @@ static volatile circular_buffer blue_tooth_rx_buff;
 static volatile circular_buffer blue_tooth_tx_buff;
 volatile unsigned int blue_tooth_uart_status = 0;
 
+static volatile circular_buffer roomba_rx_buff;
+volatile unsigned int roomba_uart_status = 0;
+
 /*============================================================================*/
 /*============================================================================*/
 void init_uart_usb()
@@ -133,20 +136,50 @@ void init_uart_roomba()
 	UBRR2H = 0b0000;		// This is for 19200 Baud.
 	UBRR2L = 0b00110011;	// This is for 19200 Baud.
 
+	/*
 	UCSR2A &= ~(_BV(U2X2));
 
-	UCSR2C = _BV(UCSZ21) | _BV(UCSZ20); /* 8-bit data */
-	UCSR2B = _BV(RXEN2) | _BV(TXEN2);   /* Enable RX and TX */
+	UCSR2C = _BV(UCSZ21) | _BV(UCSZ20); // 8-bit data
+	UCSR2B = _BV(RXEN2) | _BV(TXEN2);   // Enable RX and TX
+	*/
+	
+	// Clear USART Transmit complete flag, normal USART transmission speed
+	UCSR2A = (1 << TXC2) | (0 << U2X2);
+
+	// Enable receiver, transmitter, rx complete interrupt and tx complete interrupt.
+	UCSR2B = (1 << RXEN2) | (1 << TXEN2) | (1 << RXCIE1);
+
+	// 8-bit data
+	UCSR2C = ((1 << UCSZ21) | (1 << UCSZ20));
+
+	// Disable 2x speed
+	UCSR2A &= ~(1 << U2X2);
+
+	Cir_Buf_Init(&roomba_rx_buff);
+
+	rx_data_in_roomba_buffer = 0;
 }
 
 /*============================================================================*/
 unsigned char serial_read_roomba()
 {
+	/*
 	if((UCSR2A & _BV(RXC2)) == 0)		// If data if not available, return null char.
 	{
 		return '\0';
 	}
 	return UDR2;
+	*/
+	
+	if (roomba_rx_buff.size == 0)
+	{
+		return 0;
+	}
+	else if (roomba_rx_buff.size == 1)
+	{
+		rx_data_in_roomba_buffer = 0;
+	}
+	return Cir_Buf_Read(&roomba_rx_buff);
 }
 
 /*============================================================================*/
@@ -155,4 +188,12 @@ void serial_write_roomba(unsigned char data_out)
 	while ((UCSR2A & _BV(UDRE2)) == 0)		// while NOT ready to transmit
 	{;;}
 	UDR2 = data_out;
+}
+
+/*============================================================================*/
+// Interrupt function for data received.
+ISR(USART2_RX_vect)
+{
+	Cir_Buf_Add(&roomba_rx_buff, UDR2);
+	rx_data_in_roomba_buffer = 1;
 }

@@ -7,6 +7,7 @@
  */ 
 
 #define F_CPU 16000000L	    // Specify oscillator frequency
+#define CHECK_BIT(var, pos) ((var) & (1 << (pos)))
 #include <avr/io.h>
 #include <util/delay.h>
 #include "roomba.h"
@@ -63,4 +64,33 @@ void roomba_dock() {
 /*============================================================================*/
 void roomba_power_off() {
 	serial_write_roomba(STOP);
+}
+
+/*============================================================================*/
+unsigned int roomba_detect_physical_wall(void)
+{
+	serial_write_roomba(SENSORS);
+	serial_write_roomba(7);
+	while (rx_data_in_blue_tooth_buffer != 1);	// Wait for the Roomba to send us data.
+	unsigned int collision = serial_read_roomba();
+
+	if (collision != 0)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+/*============================================================================*/
+unsigned int roomba_detect_virtual_wall(void)
+{
+	serial_write_roomba(SENSORS);
+	serial_write_roomba(13);
+	while (rx_data_in_blue_tooth_buffer != 1);	// Wait for the Roomba to send us data.
+	unsigned int collision = serial_read_roomba();
+	if (collision != 1 || collision != 0)
+	{
+		return 0; // We got something we were not expecting so just return zero.
+	}
+	return collision;
 }

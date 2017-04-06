@@ -5,14 +5,17 @@
  *  Author: Josh
  */
 
-#define F_CPU 16000000UL
 #include "os.h"
 #include "uart.h"
 #include "remote.h"
 #include "roomba.h"
 #include "servo.h"
 #include <avr/io.h>
+#include <util/delay.h>
 #include <stdlib.h>
+
+#define Disable_Interrupt()		asm volatile ("cli"::)
+#define Enable_Interrupt()		asm volatile ("sei"::)
 
 /*============================================================================*/
 // Read in a update transmission.
@@ -82,6 +85,7 @@ void receive_transmission()
 						roomba_target_speed  = atoi(roombaSpeed_val);
 						roomba_target_radius = atoi(roombaRadius_val);
 			
+						// FOR DEBUG.
 						serial_write_usb('\n');
 			
 						// Reset values.
@@ -215,6 +219,51 @@ void update_servos()
 	adjust_pan_angle(pan_speed);
 }
 
+void looper(int loops){
+	while(loops--)
+		_delay_ms(10);
+}
+
+int setting_v = 0;
+int setting_p = 0;
+void collision_detection_and_handling()
+{
+	if (roomba_detect_physical_wall() == 1 && setting_p != 1)
+	{
+		setting_p = 2;
+	}
+	
+	/*
+	if (roomba_detect_virtual_wall() == 1 && setting_v != 1)
+	{
+		setting_v = 2;
+	}
+	*/
+	
+	if(setting_v == 2 ||setting_p == 2)
+	{
+		setting_p = 1;
+		setting_v = 1;
+		Disable_Interrupt();
+		roomba_drive(-300, 0);
+		looper(100);
+		roomba_drive(0, 0);
+		Enable_Interrupt();
+	}
+	
+	if(roomba_detect_physical_wall() == 0)
+	{
+		setting_p = 0;
+	}
+	
+	/*
+	if(roomba_detect_virtual_wall() == 0)
+	{
+		setting_v = 0;
+	}
+	*/
+}
+
 /*============================================================================*/
 void remote()
 {
@@ -224,7 +273,7 @@ void remote()
 		update_laser();
 		update_servos();
 		update_roomba();
-		//Check for collision
+		collision_detection_and_handling();
 		
 		// Reseting servo targets.
 		pan_speed   = 0;
