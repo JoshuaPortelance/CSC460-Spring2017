@@ -3,12 +3,12 @@
  *
  * Created: 4/1/2017 2:04:31 PM
  * Author: Jakob
- */ 
+ */
 
 #define F_CPU 16000000UL
 #include "os.h"
 #include "base.h"
-#include "uart/uart.c"
+#include "uart/uart_linux.c"
 #include <util/delay.h>
 #include <avr/io.h>
 #include <stdlib.h>
