@@ -216,34 +216,21 @@ void update_servos()
 }
 
 /*============================================================================*/
-void update()
-{
-	update_laser();
-	update_servos();
-	//servo_testing();
-	update_roomba();
-	
-	// PAN/TILT Servo Variables.
-	pan_speed   = 0;
-	tilt_speed  = 0;
-
-	// Roomba Variables.
-	//roomba_target_speed   = 0;
-	//roomba_target_radius  = 0;
-	//roomba_current_speed  = 0;
-	//roomba_current_radius = 0;
-
-	// Laser Init.
-	//laser_state         = 0;    //0 is off, 1 is on.
-	//laser_target_state  = 0;	//0 is off, 1 is on.
-}
-
 void remote()
 {
 	for(;;)
 	{
 		receive_transmission();
-		update();
+		update_laser();
+		update_servos();
+		update_roomba();
+		//Check for collision
+		
+		// Reseting servo targets.
+		pan_speed   = 0;
+		tilt_speed  = 0;
+		
+		// Pass off to any other System level task.
 		Task_Next();	
 	}
 }
@@ -269,26 +256,10 @@ void setup()
 
 /*============================================================================*/
 void a_main()
-{
-	//Task_Create_Period(Blink, 0, 10, 1, 1);
-	//Task_Create_Period(Blink, 0, 10, 1, 1);
-	//Task_Create_Period(Transmit, 2, 10, 1, 500);
-	//Task_Create_RR(ReadUSB, 0);
-	//Task_Create_RR(WriteUSB, 0);
-	//Task_Create_Period(ReadUSB, 0, 6, 1, 1);
-	//Task_Create_Period(WriteUSB, 0, 6, 1, 3);
-	
-	// Creating Tasks
+{	
+	// Creating Setup Task.
 	Task_Create_System(setup, 0);
-	//Task_Create_Period(remote, 1, 3, 4, 505);
-	Task_Create_System(remote, 1);
-	//Task_Create_Period(receive_transmission, 1, 6, 2, 500);
-	//Task_Create_Period(update, 2, 6, 2, 503);
 	
-	//Task_Create_Period(b, 0, 3, 2, 1);
-	//Task_Create_Period(update_servos, 0, 10, 1, 500);
-	//Task_Create_Period(update_roomba, 0, 10, 1, 3);
-	//Task_Create_Period(update_laser, 0, 10, 1, 4);
-	//Task_Create_Period(servo_testing, 0, 2, 1, 502);
-	//Task_Create_Period(serial_buffer_test, 0, 3, 2, 1);
+	// Creating Main Task.
+	Task_Create_System(remote, 1);
 }
