@@ -1,5 +1,5 @@
 CC = avr-gcc
-OFLAGS = -DF_CPU=16000000 -Wall -Os -mmcu=atmega2560
+OFLAGS = -DF_CPU=16000000L -Wall -Os -mmcu=atmega2560
 COPY = avr-objcopy
 HEXFLAGS = -O ihex
 FLASH = avrdude

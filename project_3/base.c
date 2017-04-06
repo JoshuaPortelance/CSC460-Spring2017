@@ -151,8 +151,8 @@ void getSpeeds() {
       if(radiusRoomba >  2000)radiusRoomba =  1999;
       if(radiusRoomba < -2000)radiusRoomba = -1999;
 
-      if(radiusRoomba <  2000 && radiusRoomba >=  radiusOffset)radiusRoomba = 2000-radiusRoomba+120;
-      if(radiusRoomba > -2000 && radiusRoomba <= -radiusOffset)radiusRoomba = -2000-radiusRoomba-120;
+      if(radiusRoomba <  2000 && radiusRoomba >=  radiusOffset)radiusRoomba = 2000-radiusRoomba+150;
+      if(radiusRoomba > -2000 && radiusRoomba <= -radiusOffset)radiusRoomba = -2000-radiusRoomba-150;
     }
 
 
