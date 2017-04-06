@@ -3,7 +3,7 @@
  *
  * Created: 4/1/2017 2:04:31 PM
  * Author: Jakob
- */ 
+ */
 
 #define F_CPU 16000000UL
 #include "os.h"
