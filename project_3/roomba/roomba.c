@@ -76,7 +76,6 @@ unsigned int roomba_detect_physical_wall()
 
 	if (collision != 0)
 	{
-		//serial_write_usb('H');
 		return 1;
 	}
 	return 0;
@@ -93,7 +92,5 @@ unsigned int roomba_detect_virtual_wall()
 	{
 		return 0; // We got something we were not expecting so just return zero.
 	}
-	//if(collision == 1)
-		//serial_write_usb('G');
 	return collision;
 }

@@ -5,7 +5,6 @@
  *  Author: Josh
  */
 
-#define F_CPU 16000000UL
 #define BAUD 9600	// This needs to be defined, but is never used directly.
 #include "uart.h"
 #include "circular_buffer.h"
@@ -13,9 +12,6 @@
 #include <avr/io.h>
 #include <util/setbaud.h>
 #include <avr/interrupt.h>
-
-#define Disable_Interrupt()		asm volatile ("cli"::)
-#define Enable_Interrupt()		asm volatile ("sei"::)
 
 static volatile circular_buffer blue_tooth_rx_buff;
 static volatile circular_buffer blue_tooth_tx_buff;

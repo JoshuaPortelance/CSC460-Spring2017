@@ -51,22 +51,22 @@ void init_servos()
 void adjust_pan_angle(int angle_delta)
 {
 	//Verifying angle delta.
-	if (angle_delta > MAX_ANGLE_DELTA)		// Max increase.
+	if (angle_delta > MAX_ANGLE_DELTA)			// Max increase.
 	{
 		angle_delta = MAX_ANGLE_DELTA;
 	}
-	else if (angle_delta < MIN_ANGLE_DELTA)	// Max decrease.
+	else if (angle_delta < MIN_ANGLE_DELTA)		// Max decrease.
 	{
 		angle_delta = MIN_ANGLE_DELTA;
 	}
 
 	//Verifying angle.	
 	current_pan_angle += angle_delta;
-	if (current_pan_angle > MAX_ANGLE_VAL)			// Max angle.
+	if (current_pan_angle > MAX_ANGLE_VAL)		// Max angle.
 	{
 		current_pan_angle = MAX_ANGLE_VAL;
 	}
-	else if (current_pan_angle < MIN_ANGLE_VAL)		// Min angle.
+	else if (current_pan_angle < MIN_ANGLE_VAL)	// Min angle.
 	{
 		current_pan_angle = MIN_ANGLE_VAL;
 	}
@@ -78,11 +78,11 @@ void adjust_pan_angle(int angle_delta)
 void adjust_tilt_angle(int angle_delta)
 {
 	//Verifying angle delta.
-	if (angle_delta > MAX_ANGLE_DELTA)		// Max increase.
+	if (angle_delta > MAX_ANGLE_DELTA)				// Max increase.
 	{
 		angle_delta = MAX_ANGLE_DELTA;
 	}
-	else if (angle_delta < MIN_ANGLE_DELTA)	// Max decrease.
+	else if (angle_delta < MIN_ANGLE_DELTA)			// Max decrease.
 	{
 		angle_delta = MIN_ANGLE_DELTA;
 	}

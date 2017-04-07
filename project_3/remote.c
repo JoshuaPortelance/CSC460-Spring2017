@@ -15,9 +15,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define Disable_Interrupt()		asm volatile ("cli"::)
-#define Enable_Interrupt()		asm volatile ("sei"::)
-
 /*============================================================================*/
 // Read in a update transmission.
 void receive_transmission()
@@ -40,10 +37,8 @@ void receive_transmission()
 	if(rx_data_in_blue_tooth_buffer == 1)
 	{
 		unsigned char inByte = serial_read_bt();
-
-		// FOR DEBUG.
-		//serial_write_usb(inByte);
 		
+		// Handling corrupt data.
 		if(inByte > '9' && inByte != '#' && inByte != '|' && inByte != '%' && inByte != '-')
 		{
 			return;
@@ -54,11 +49,13 @@ void receive_transmission()
 			status = 1;
 			while(status == 1)
 			{
+				// Handling corrupt data.
 				if(inByte > '9' && inByte != '#' && inByte != '|' && inByte != '%' && inByte != '-')
 				{
 					return;
 				}
 				
+				// Handling partial packets.
 				if (inByte == '#')
 				{
 					// Reset values.
@@ -69,9 +66,6 @@ void receive_transmission()
 				if(rx_data_in_blue_tooth_buffer == 1)
 				{
 					inByte = serial_read_bt();
-					
-					// FOR DEBUG.
-					//serial_write_usb(inByte);
 					
 					if (inByte == '%')
 					{
@@ -102,9 +96,6 @@ void receive_transmission()
 						laser_target_state	 = atoi(laser_val);
 						roomba_target_speed  = atoi(roombaSpeed_val);
 						roomba_target_radius = atoi(roombaRadius_val);
-			
-						// FOR DEBUG.
-						//serial_write_usb('\n');
 			
 						// Reset values.
 						input_pos = 0;
@@ -237,23 +228,23 @@ void update_servos()
 	adjust_pan_angle(pan_speed);
 }
 
+/*============================================================================*/
 void looper(int loops){
 	while(loops--)
 		_delay_ms(10);
 }
 
+/*============================================================================*/
 int setting_p = 0;
 void physical_wall_collision_detection_and_handling()
 {
 	if ((roomba_detect_physical_wall() == 1) && (setting_p != 1))
 	{
-		//serial_write_usb('X');
 		setting_p = 2;
 	}
 	
 	if(setting_p == 2)
 	{
-		//serial_write_usb('Y');
 		setting_p = 1;
 		roomba_drive(-300, 0);
 		looper(100);
@@ -262,34 +253,29 @@ void physical_wall_collision_detection_and_handling()
 	
 	if(roomba_detect_physical_wall() == 0)
 	{
-		//serial_write_usb('Z');
 		setting_p = 0;
 	}
 }
 
+/*============================================================================*/
 int setting_v = 0;
 void virtual_wall_collision_detection_and_handling()
 {	
 	if ((roomba_detect_virtual_wall() == 1) && (setting_v != 1))
 	{
-		//serial_write_usb('A');
 		setting_v = 2;
 	}
 	
 	if(setting_v == 2)
 	{
-		//serial_write_usb('B');
 		setting_v = 1;
-		//Disable_Interrupt();
 		roomba_drive(-300, 0);
 		looper(100);
 		roomba_drive(0, 0);
-		//Enable_Interrupt();
 	}
 	
 	if(roomba_detect_virtual_wall() == 0)
 	{
-		//serial_write_usb('C');
 		setting_v = 0;
 	}
 }
@@ -299,19 +285,15 @@ void remote()
 {
 	for(;;)
 	{
-		//physical_wall_collision_detection_and_handling();
 		receive_transmission();
 		update_laser();
 		update_servos();
 		update_roomba();
-		//virtual_wall_collision_detection_and_handling();
+		physical_wall_collision_detection_and_handling();
 		
 		// Reseting servo targets.
 		pan_speed   = 0;
 		tilt_speed  = 0;
-		
-		// Pass off to any other System level task.
-		Task_Next();	
 	}
 }
 
@@ -340,6 +322,6 @@ void a_main()
 	// Creating Setup Task.
 	Task_Create_System(setup, 0);
 	
-	// Creating Main Task.
+	// Creating Main Loop Task.
 	Task_Create_System(remote, 1);
 }
